@@ -48,6 +48,5 @@ class KeychainQ: NSObject {
 
     @objc
     func resetInternetPasswords(_ server: String?, account: String?, resolver: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
-
     }
 }

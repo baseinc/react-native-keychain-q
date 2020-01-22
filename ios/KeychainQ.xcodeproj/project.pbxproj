@@ -56,8 +56,8 @@
 			isa = PBXGroup;
 			children = (
 				629C2A0423D8088E0062B038 /* Config.xcconfig */,
-				629C2A0223D8053F0062B038 /* KeychainQ.swift */,
 				629C2A0823D85AC00062B038 /* Structures.swift */,
+				629C2A0223D8053F0062B038 /* KeychainQ.swift */,
 				B3E7B5891CC2AC0600A0062D /* KeychainQ.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
 				629C2A0123D8053F0062B038 /* KeychainQ-Bridging-Header.h */,
