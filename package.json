@@ -1,23 +1,23 @@
 {
   "name": "react-native-keychain-q",
   "title": "React Native Keychain Q",
-  "version": "1.0.0",
-  "description": "TODO",
+  "version": "0.0.1",
+  "description": "Keychain Service API Wrapper for React Native iOS",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/github_account/react-native-keychain-q.git",
-    "baseUrl": "https://github.com/github_account/react-native-keychain-q"
+    "url": "git+https://github.com/baseinc/react-native-keychain-q.git",
+    "baseUrl": "https://github.com/baseinc/react-native-keychain-q"
   },
   "keywords": [
     "react-native"
   ],
   "author": {
-    "name": "Your Name",
-    "email": "yourname@email.com"
+    "name": "Satoshi OHKI",
+    "email": "roothybrid7@gmail.com"
   },
   "license": "MIT",
   "licenseFilename": "LICENSE",
@@ -27,7 +27,23 @@
     "react-native": ">=0.59.0-rc.0 <1.0.x"
   },
   "devDependencies": {
+    "@babel/core": "^7.8.3",
+    "@babel/runtime": "^7.8.3",
+    "@react-native-community/bob": "^0.8.0",
+    "@react-native-community/eslint-config": "^0.0.6",
+    "@types/react": "^16.9.18",
+    "@types/react-native": "^0.61.2",
+    "@typescript-eslint/eslint-plugin": "^2.17.0",
+    "@typescript-eslint/parser": "^2.17.0",
+    "cspell": "^4.0.44",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.9.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^4.2.0",
+    "lint-staged": "^10.0.1",
+    "prettier": "^1.19.1",
     "react": "^16.8.3",
-    "react-native": "^0.59.10"
+    "react-native": "^0.59.10",
+    "typescript": "^3.7.5"
   }
 }

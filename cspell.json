@@ -1,0 +1,15 @@
+{
+    "version": "0.1",
+    "language": "en",
+    "words": [
+        "esnext"
+    ],
+    "flagWords": [],
+    "ignoreRegExpList": [
+        "[０-９Ａ-Ｚａ-ｚぁ-んァ-ヶ亜-熙纊-黑]+"
+    ],
+    "ignorePaths": [
+        "node_modules",
+        "lib"
+    ]
+}
