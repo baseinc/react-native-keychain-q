@@ -12,6 +12,10 @@ import React, { Component } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import KeychainQ from 'react-native-keychain-q';
 
+const server = 'https://keychain-q.example.com';
+const account = 'bob';
+const password = 'password';
+
 export default class App extends Component<{}> {
   state = {
     status: 'starting',
@@ -23,6 +27,16 @@ export default class App extends Component<{}> {
         status: 'native callback received',
         message
       });
+      (async () => {
+        try {
+          const t = await KeychainQ.fetchSupportedBiometryType();
+          const exists = await KeychainQ.hasInternetPassword(server, account);
+          console.log(exists);
+          this.setState({biometryType: t, exists: exists ? 'pass exists' : 'pass not exists'});
+        } catch (error) {
+          console.warn(error);
+        }
+      })();
     });
   }
   render() {
@@ -32,6 +46,8 @@ export default class App extends Component<{}> {
         <Text style={styles.instructions}>STATUS: {this.state.status}</Text>
         <Text style={styles.welcome}>☆NATIVE CALLBACK MESSAGE☆</Text>
         <Text style={styles.instructions}>{this.state.message}</Text>
+        <Text style={styles.instructions}>{this.state.biometryType}</Text>
+        <Text style={styles.instructions}>{this.state.exists}</Text>
       </View>
     );
   }
