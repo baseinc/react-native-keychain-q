@@ -19,7 +19,11 @@ const password = 'password';
 export default class App extends Component<{}> {
   state = {
     status: 'starting',
-    message: '--'
+    message: '--',
+    existsAnyAccount: '',
+    existsAccount: '',
+    notExistsAccount: '',
+    credentials: null,
   };
   componentDidMount() {
     KeychainQ.sampleMethod('Testing', 123, (message) => {
@@ -30,9 +34,22 @@ export default class App extends Component<{}> {
       (async () => {
         try {
           const t = await KeychainQ.fetchSupportedBiometryType();
-          const exists = await KeychainQ.hasInternetPassword(server, account);
-          console.log(exists);
-          this.setState({biometryType: t, exists: exists ? 'pass exists' : 'pass not exists'});
+          this.setState({biometryType: t});
+
+          const added = await KeychainQ.setInternetPassword(server, account, password, {});
+          const existsAnyAccount = await KeychainQ.containsAnyInternetPassword(server, {});
+          const existsAccount = await KeychainQ.containsAnyInternetPassword(server, {account: account});
+          const notExistsAccount = await KeychainQ.containsAnyInternetPassword(server, {account: 'foo'});
+          const credentials = await KeychainQ.findInternetPassword(server, {account: account});
+          const searched = await KeychainQ.searchInternetPasswords(server, {});
+console.log(added, credentials, searched)
+          this.setState({
+            biometryType: t,
+            existsAnyAccount: existsAnyAccount ? 'exists' : 'not exists',
+            existsAccount: existsAccount ? 'exists' : 'not exists',
+            notExistsAccount: notExistsAccount ? 'exists' : 'not exists',
+            credentials: credentials,
+          });
         } catch (error) {
           console.warn(error);
         }
@@ -46,8 +63,16 @@ export default class App extends Component<{}> {
         <Text style={styles.instructions}>STATUS: {this.state.status}</Text>
         <Text style={styles.welcome}>☆NATIVE CALLBACK MESSAGE☆</Text>
         <Text style={styles.instructions}>{this.state.message}</Text>
+        <Text style={styles.welcome}>Biometry Type</Text>
         <Text style={styles.instructions}>{this.state.biometryType}</Text>
-        <Text style={styles.instructions}>{this.state.exists}</Text>
+        <Text style={styles.welcome}>Password? in {server}</Text>
+        <Text style={styles.instructions}>{this.state.existsAnyAccount}</Text>
+        <Text style={styles.welcome}>Password? in {server} and {account}</Text>
+        <Text style={styles.instructions}>{this.state.existsAccount}</Text>
+        <Text style={styles.welcome}>Password? in {server} and unknown user</Text>
+        <Text style={styles.instructions}>{this.state.notExistsAccount}</Text>
+        <Text style={styles.welcome}>credentials in {server} and {account}</Text>
+        <Text style={styles.instructions}>{this.state.credentials && ["account=", this.state.credentials.account, ", password=", this.state.credentials.password].join('') }</Text>
       </View>
     );
   }

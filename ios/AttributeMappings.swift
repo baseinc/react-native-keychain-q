@@ -10,9 +10,6 @@ import Foundation
 import Security
 import LocalAuthentication
 
-extension LABiometryType {
-}
-
 /// - Note: Reference [Accessibility Values](https://developer.apple.com/documentation/security/keychain_services/keychain_items/item_attribute_keys_and_values)
 enum Accessible: String, CaseIterable {
     case whenPasscodeSetThisDeviceOnly
@@ -38,9 +35,11 @@ enum Accessible: String, CaseIterable {
 }
 
 /// - Note: Reference [SecAccessControlCreateFlags](https://developer.apple.com/documentation/security/secaccesscontrolcreateflags)
-enum AccessControlConstraints: String, CaseIterable {
+enum AccessControlConstraints: String {
     case devicePasscode
+    @available(iOS 11.3, *)
     case biometryAny
+    @available(iOS 11.3, *)
     case biometryCurrentSet
     case userPresence
     case applicationPassword
@@ -50,13 +49,41 @@ enum AccessControlConstraints: String, CaseIterable {
         case .devicePasscode:
             return .devicePasscode
         case .biometryAny:
-            return .biometryAny
+            if #available(iOS 11.3, *) {
+                return .biometryAny
+            } else {
+                // Fallback on earlier versions
+                return []
+            }
         case .biometryCurrentSet:
-            return .biometryCurrentSet
+            if #available(iOS 11.3, *) {
+                return .biometryCurrentSet
+            } else {
+                // Fallback on earlier versions
+                return []
+            }
         case .userPresence:
             return .userPresence
         case .applicationPassword:
             return .applicationPassword
+        }
+    }
+}
+
+enum BiometryTypeLabel: String, CaseIterable {
+    case touchID
+    case faceID
+    case none
+
+    @available(iOS 11.0, *)
+    init(biometryType: LABiometryType) {
+        switch biometryType {
+        case .touchID:
+            self = .touchID
+        case .faceID:
+            self = .faceID
+        default:
+            self = .none
         }
     }
 }

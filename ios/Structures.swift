@@ -7,14 +7,21 @@
 //
 
 import Foundation
+import Security
 
 enum KeychainError: Error {
     case noPassword
     case unexpectedPasswordData
+    case invalidInputData(message: String)
     case unhandledError(status: OSStatus)
 }
 
-struct Credentials {
+struct Credentials: Encodable {
+    enum CodingKeys: String, CodingKey {
+        case account
+        case password
+    }
+
     let account: String
     let password: String
 
@@ -27,6 +34,12 @@ struct Credentials {
         }
         self.account = account
         self.password = password
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(account, forKey: .account)
+        try container.encode(password, forKey: .password)
     }
 }
 
@@ -43,12 +56,128 @@ enum InputAttributeKeys: String, CodingKey {
     case accessible
 }
 
-struct UpdateOptions {
-    let accessible: String?
-    let accessControls: [String]?
-    let authenticationPrompt: String?
+struct AccountAttribute: RawRepresentable, ItemDecodable {
+    enum ItemCodingKeys: String, CodingKey {
+        case account
+    }
+
+    let rawValue: String
+
+    init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+
+    init?(item: Any) {
+        guard let account = type(of: self).decodeStringIfPresent(item, for: .account) else { return nil }
+        self.rawValue = account
+    }
 }
 
-struct ReadOptions {
-    let authenticationPrompt: String?
+struct WriteAttributes: ItemDecodable {
+    enum ItemCodingKeys: String, CodingKey {
+        case accessible
+        case accessControls
+    }
+    let accessible: String?
+    let accessControls: [String]?
+
+    init(item: Any) {
+        self.accessible = type(of: self).decodeStringIfPresent(item, for: .accessible)
+        self.accessControls = type(of: self).decodeStringArrayIfPresent(item, for: .accessControls)
+    }
 }
+
+struct CommonAttributes: ItemDecodable {
+    enum ItemCodingKeys: String, CodingKey {
+        case accessGroup
+        case authenticationPrompt
+    }
+    let accessGroup: String?
+    let authenticationPrompt: String?
+
+    init(item: Any) {
+        self.accessGroup = type(of: self).decodeStringIfPresent(item, for: .accessGroup)
+        self.authenticationPrompt = type(of: self).decodeStringIfPresent(item, for: .authenticationPrompt)
+    }
+}
+
+struct InternetPasswordQueryBuilder {
+    private(set) var query: [String: Any]
+
+    init(attributes: [String: Any] = [:]) {
+        self.query = attributes.merging([kSecClass as String: kSecClassInternetPassword], uniquingKeysWith: { $1 })
+    }
+    init(serverString: String) throws {
+        guard let url = parseURLString(serverString) else { throw KeychainError.invalidInputData(message: "input value `server` is not found") }
+        self.query = [
+            kSecClass as String: kSecClassInternetPassword,
+        ]
+        if let host = url.host {
+            self.query[kSecAttrServer as String] = host
+        }
+        if let port = url.port {
+            self.query[kSecAttrPort as String] = port
+        }
+    }
+
+    func with(account: String) -> Self {
+        return type(of: self).init(attributes: query.merging([kSecAttrAccount as String: account], uniquingKeysWith: { $1 }))
+    }
+
+    func with(commonAttributes: CommonAttributes) -> Self {
+        var mQuery: [String: Any] = [:]
+        if let accessGroup = commonAttributes.accessGroup {
+            mQuery[kSecAttrAccessGroup as String] = accessGroup
+        }
+        if let authenticationPrompt = commonAttributes.authenticationPrompt {
+            mQuery[kSecUseOperationPrompt as String] = authenticationPrompt
+        }
+        return type(of: self).init(attributes: query.merging(mQuery, uniquingKeysWith: { $1 }))
+    }
+
+    func with(key: String, value: Any) -> Self {
+        return type(of: self).init(attributes: query.merging([key: value], uniquingKeysWith: { $1 }))
+    }
+
+    func with(attributes: [String: Any]) -> Self {
+        return type(of: self).init(attributes: query.merging(attributes, uniquingKeysWith: { $1 }))
+    }
+
+    func with(account: String, attributes: WriteAttributes) throws -> Self {
+        var mQuery: [String: Any] = [:]
+        mQuery[kSecAttrAccount as String] = account
+        var accessible: String?
+        var accessControls: [AccessControlConstraints] = []
+        if let rawValue = attributes.accessible, let typedAccessible = Accessible(rawValue: rawValue) {
+            accessible = typedAccessible.dataValue
+        }
+        if let rawValues = attributes.accessControls {
+            accessControls = rawValues.compactMap({ AccessControlConstraints(rawValue: $0) })
+        }
+        if accessControls.isEmpty {
+            if let accessible = accessible {
+                mQuery[kSecAttrAccessible as String] = accessible
+            }
+        } else {
+            let flags = accessControls.reduce(into: SecAccessControlCreateFlags()) { result, constraint in
+                let dataValue = constraint.dataValue
+                guard !dataValue.isEmpty else { return }
+                if result.isEmpty {
+                    result.insert(dataValue)
+                } else {
+                    result.insert(.or)
+                    result.insert(dataValue)
+                }
+            }
+            let nonnullAccessible = accessible ?? kSecAttrAccessibleAfterFirstUnlock as String
+            var error: Unmanaged<CFError>?
+            let access = SecAccessControlCreateWithFlags(kCFAllocatorDefault, nonnullAccessible as CFString, flags, &error)
+            if let error = error?.takeUnretainedValue() {
+                throw error
+            }
+            mQuery[kSecAttrAccessControl as String] = access
+        }
+        return type(of: self).init(attributes: query.merging(mQuery, uniquingKeysWith: { $1 }))
+    }
+}
+
