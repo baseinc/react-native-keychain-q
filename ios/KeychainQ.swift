@@ -15,7 +15,7 @@ class KeychainQ: NSObject {
 
     @objc
     func constantsToExport() -> [AnyHashable: Any]! {
-        return constants().reduce(into: [AnyHashable: Any]()) { result, item in
+        return constants.reduce(into: [AnyHashable: Any]()) { result, item in
             result[item.key.rawValue] = item.value
         }
     }
@@ -121,8 +121,9 @@ extension KeychainQ {
 
 extension KeychainQ {
 
-    func constants() -> [ConstantKeys: Any] {
+    var constants: [ConstantKeys: Any] {
         return [
+            // To handling when user canceled on authentication prompt.
             .authenticationUserCanceledCode: Int(errSecUserCanceled),
         ]
     }
@@ -238,8 +239,7 @@ extension KeychainQ {
             .with(attributes: [
                 kSecMatchLimit as String: kSecMatchLimitAll,
                 kSecReturnAttributes as String: true,
-                kSecReturnData as String: true,
-//                kSecUseAuthenticationUI as String: kSecUseAuthenticationUISkip,
+                kSecReturnData as String: true
             ])
         if let account = AccountAttribute(item: options) {
             queryBuilder = queryBuilder.with(account: account.rawValue)
@@ -247,7 +247,6 @@ extension KeychainQ {
         let query = queryBuilder.query
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
-        print(#function, result)
         switch status {
         case errSecSuccess, errSecInteractionNotAllowed:
             guard let result = result as? [Any] else { throw KeychainError.unexpectedPasswordData }

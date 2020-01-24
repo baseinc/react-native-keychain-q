@@ -33,6 +33,7 @@ export default class App extends Component<{}> {
         try {
           console.log("constant", KeychainQ.authenticationUserCanceledCode);
           const t = await KeychainQ.fetchSupportedBiometryType();
+
           this.setState({biometryType: t});
 
           await KeychainQ.saveInternetPassword(server, creds[0].account, creds[0].password, {accessible: 'whenUnlocked'});

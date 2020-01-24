@@ -9,6 +9,12 @@
 import Foundation
 import Security
 
+enum KeychainErrorCode: String, CaseIterable {
+    case userCanceled = "USER_CANCELED"
+    case noPassword = "NO_PASSWORD"
+    case unexpectedPasswordData = "UNEXPECTED_PASSWORD_DATA"
+}
+
 enum KeychainError: Error, LocalizedError, CustomNSError {
     case noPassword
     case unexpectedPasswordData
@@ -22,11 +28,11 @@ enum KeychainError: Error, LocalizedError, CustomNSError {
     var errorCode: Int {
         switch self {
         case .noPassword:
-            return -1
+            return -131
         case .unexpectedPasswordData:
-            return -2
+            return -132
         case .invalidInputData:
-            return -3
+            return -133
         case .unhandledError(status: let status):
             return Int(status)
         }
@@ -35,7 +41,7 @@ enum KeychainError: Error, LocalizedError, CustomNSError {
     var errorDescription: String? {
         switch self {
         case .noPassword:
-            return "Password not found."
+            return "Password is not found."
         case .unexpectedPasswordData:
             return "Unexpected password data."
         case .invalidInputData(message: let message):
