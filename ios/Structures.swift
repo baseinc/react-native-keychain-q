@@ -9,11 +9,46 @@
 import Foundation
 import Security
 
-enum KeychainError: Error {
+enum KeychainError: Error, LocalizedError, CustomNSError {
     case noPassword
     case unexpectedPasswordData
     case invalidInputData(message: String)
     case unhandledError(status: OSStatus)
+
+    static var errorDomain: String {
+        return "in.thebase.KeychainQ"
+    }
+
+    var errorCode: Int {
+        switch self {
+        case .noPassword:
+            return -1
+        case .unexpectedPasswordData:
+            return -2
+        case .invalidInputData:
+            return -3
+        case .unhandledError(status: let status):
+            return Int(status)
+        }
+    }
+
+    var errorDescription: String? {
+        switch self {
+        case .noPassword:
+            return "Password not found."
+        case .unexpectedPasswordData:
+            return "Unexpected password data."
+        case .invalidInputData(message: let message):
+            return message
+        case .unhandledError(status: let status):
+            if #available(iOS 11.3, *) {
+                return SecCopyErrorMessageString(status, nil) as String? ?? "Unknown error."
+            } else {
+                // Fallback on earlier versions
+                return "Unhandled error \(status)"
+            }
+        }
+    }
 }
 
 protocol Credentials {
@@ -62,12 +97,8 @@ struct SearchConditions {
     let attributesOnly: Bool?
 }
 
-/// Input parameter keys from React Native
-enum InputAttributeKeys: String, CodingKey {
-    case accessGroup
-    case service
-    case authenticationPrompt
-    case accessible
+enum ConstantKeys: String, CodingKey {
+    case authenticationUserCanceledCode
 }
 
 struct AccountAttribute: RawRepresentable, ItemDecodable {

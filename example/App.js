@@ -31,6 +31,7 @@ export default class App extends Component<{}> {
   componentDidMount() {
       (async () => {
         try {
+          console.log("constant", KeychainQ.authenticationUserCanceledCode);
           const t = await KeychainQ.fetchSupportedBiometryType();
           this.setState({biometryType: t});
 
@@ -55,6 +56,12 @@ export default class App extends Component<{}> {
           const cred = await KeychainQ.findInternetPassword(server, {account: creds[0].account});
           console.log(cred);
         } catch (error) {
+          Object.getOwnPropertyNames(error).forEach(prop => {
+            console.log(prop + ' => ' + error[prop]);
+            if (prop === 'userInfo') {
+              console.log(JSON.stringify(error[prop], null, 2));
+            }
+          })
           console.warn(error);
         }
       })();

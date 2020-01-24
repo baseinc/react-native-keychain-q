@@ -14,6 +14,13 @@ import LocalAuthentication
 class KeychainQ: NSObject {
 
     @objc
+    func constantsToExport() -> [AnyHashable: Any]! {
+        return constants().reduce(into: [AnyHashable: Any]()) { result, item in
+            result[item.key.rawValue] = item.value
+        }
+    }
+
+    @objc
     static func requiresMainQueueSetup() -> Bool {
         return false
     }
@@ -114,6 +121,12 @@ extension KeychainQ {
 
 extension KeychainQ {
 
+    func constants() -> [ConstantKeys: Any] {
+        return [
+            .authenticationUserCanceledCode: Int(errSecUserCanceled),
+        ]
+    }
+
     func supportedBiometryType() throws -> String {
         let context = LAContext()
         var error: NSError?
@@ -212,7 +225,7 @@ extension KeychainQ {
         case errSecSuccess:
             guard let result = result else { throw KeychainError.unexpectedPasswordData }
             return try InternetCredentials(item: result)
-        case errSecItemNotFound, errSecUserCanceled:
+        case errSecItemNotFound:
             return nil
         default:
             break
@@ -239,7 +252,7 @@ extension KeychainQ {
         case errSecSuccess, errSecInteractionNotAllowed:
             guard let result = result as? [Any] else { throw KeychainError.unexpectedPasswordData }
             return result.compactMap({ try? InternetCredentials(item: $0) })
-        case errSecItemNotFound, errSecUserCanceled:
+        case errSecItemNotFound:
             return []
         default:
             break
