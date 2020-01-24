@@ -22,11 +22,6 @@ class KeychainQ: NSObject {
 // MARK: - Public Bridging API
 @objc extension KeychainQ {
 
-    @objc(sampleMethod:numberParameter:callback:)
-    func sampleMethod(stringArgument: String, numberParameter numberArgument: NSNumber, callback: RCTResponseSenderBlock) {
-        callback(["numberArgument: \(numberArgument) stringArgument: \(stringArgument)"])
-    }
-
     @objc
     func fetchSupportedBiometryType(_ resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         do {
@@ -38,9 +33,9 @@ class KeychainQ: NSObject {
     }
 
     @objc
-    func setInternetPassword(_ server: String, account: String, password: String, options: [String: Any]?, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
+    func saveInternetPassword(_ server: String, account: String, password: String, options: [String: Any]?, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         do {
-            try set(server: server, account: account, password: password, options: options ?? [:])
+            try save(server: server, account: account, password: password, options: options ?? [:])
             resolver(true)
         } catch {
             rejecter(#function, error.localizedDescription, error)
@@ -82,23 +77,38 @@ class KeychainQ: NSObject {
     }
 
     @objc
-    func resetInternetPasswords(_ server: String?, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
-        resolver(true)
+    func resetInternetPasswords(_ server: String?, options: [String: Any], resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
+        do {
+            try reset(server: server, options: options)
+            resolver(true)
+        } catch {
+            rejecter(#function, error.localizedDescription, error)
+        }
     }
 
     @objc
-    func searchInternetPasswords(_ server: String?, options: [String: Any], resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
-        resolver(true)
+    func retrieveInternetPasswords(_ server: String?, options: [String: Any], resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
+        do {
+            let collection = try retrieve(server: server, options: options)
+            let encoder = JSONEncoder()
+            let array = collection.compactMap({ try? encoder.encode($0) }).compactMap({ try? JSONSerialization.jsonObject(with: $0, options: [.allowFragments])})
+            resolver(array)
+        } catch {
+            rejecter(#function, error.localizedDescription, error)
+        }
     }
 }
 
 extension KeychainQ {
 
-    func matchingInternetPasswordQueryBuilder(server: String, options: Any) throws -> InternetPasswordQueryBuilder {
+    func matchingInternetPasswordQueryBuilder(server: String?, options: Any) throws -> InternetPasswordQueryBuilder {
         let commonAttrs = CommonAttributes(item: options)
-        return try InternetPasswordQueryBuilder(serverString: server)
+        if let server = server {
+            return try InternetPasswordQueryBuilder(serverString: server)
+                .with(commonAttributes: commonAttrs)
+        }
+        return InternetPasswordQueryBuilder()
             .with(commonAttributes: commonAttrs)
-            .with(key: kSecMatchLimit as String, value: kSecMatchLimitOne)
     }
 }
 
@@ -120,7 +130,7 @@ extension KeychainQ {
         return BiometryTypeLabel.none.rawValue
     }
 
-    func set(server: String, account: String, password: String, options: Any) throws {
+    func save(server: String, account: String, password: String, options: Any) throws {
         guard let passwordData = password.data(using: .utf8) else { throw KeychainError.unexpectedPasswordData }
         let commontAttrs = CommonAttributes(item: options)
         let writeAttrs = WriteAttributes(item: options)
@@ -157,6 +167,14 @@ extension KeychainQ {
         }
     }
 
+    func reset(server: String?, options: Any) throws {
+        let query = try matchingInternetPasswordQueryBuilder(server: server, options: options).query
+        let status = SecItemDelete(query as CFDictionary)
+        if status != errSecSuccess && status != errSecItemNotFound {
+            throw KeychainError.unhandledError(status: status)
+        }
+    }
+
     func contains(server: String, options: Any) throws -> Bool {
         let account = AccountAttribute(item: options)
         var queryBuilder = try matchingInternetPasswordQueryBuilder(server: server, options: options)
@@ -178,7 +196,7 @@ extension KeychainQ {
         }
     }
 
-    func get(server: String, options: Any) throws -> Credentials? {
+    func get(server: String, options: Any) throws -> InternetCredentials? {
         guard let account = AccountAttribute(item: options) else { throw KeychainError.invalidInputData(message: "input value `account` is not found")}
         let query = try matchingInternetPasswordQueryBuilder(server: server, options: options)
             .with(account: account.rawValue)
@@ -193,9 +211,36 @@ extension KeychainQ {
         switch status {
         case errSecSuccess:
             guard let result = result else { throw KeychainError.unexpectedPasswordData }
-            return try Credentials(item: result)
-        case errSecItemNotFound:
+            return try InternetCredentials(item: result)
+        case errSecItemNotFound, errSecUserCanceled:
             return nil
+        default:
+            break
+        }
+        throw KeychainError.unhandledError(status: status)
+    }
+
+    func retrieve(server: String?, options: Any) throws -> [InternetCredentials] {
+        var queryBuilder = try matchingInternetPasswordQueryBuilder(server: server, options: options)
+            .with(attributes: [
+                kSecMatchLimit as String: kSecMatchLimitAll,
+                kSecReturnAttributes as String: true,
+                kSecReturnData as String: true,
+//                kSecUseAuthenticationUI as String: kSecUseAuthenticationUISkip,
+            ])
+        if let account = AccountAttribute(item: options) {
+            queryBuilder = queryBuilder.with(account: account.rawValue)
+        }
+        let query = queryBuilder.query
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        print(#function, result)
+        switch status {
+        case errSecSuccess, errSecInteractionNotAllowed:
+            guard let result = result as? [Any] else { throw KeychainError.unexpectedPasswordData }
+            return result.compactMap({ try? InternetCredentials(item: $0) })
+        case errSecItemNotFound, errSecUserCanceled:
+            return []
         default:
             break
         }

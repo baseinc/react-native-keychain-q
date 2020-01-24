@@ -16,12 +16,21 @@ enum KeychainError: Error {
     case unhandledError(status: OSStatus)
 }
 
-struct Credentials: Encodable {
+protocol Credentials {
+    var account: String { get }
+    var password: String { get }
+}
+
+struct InternetCredentials: Credentials, Encodable {
     enum CodingKeys: String, CodingKey {
+        case server
+        case port
         case account
         case password
     }
 
+    let server: String
+    let port: Int?
     let account: String
     let password: String
 
@@ -29,15 +38,20 @@ struct Credentials: Encodable {
         guard let existingItem = item as? [String: Any],
             let passwordData = existingItem[kSecValueData as String] as? Data,
             let password = String(data: passwordData, encoding: .utf8),
-            let account = existingItem[kSecAttrAccount as String] as? String else {
+            let account = existingItem[kSecAttrAccount as String] as? String,
+            let server = existingItem[kSecAttrServer as String] as? String else {
                 throw KeychainError.unexpectedPasswordData
         }
+        self.server = server
+        self.port = existingItem[kSecAttrPort as String] as? Int
         self.account = account
         self.password = password
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(server, forKey: .server)
+        try container.encodeIfPresent(port, forKey: .port)
         try container.encode(account, forKey: .account)
         try container.encode(password, forKey: .password)
     }
