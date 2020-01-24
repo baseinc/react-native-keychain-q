@@ -12,7 +12,11 @@ import Security
 enum KeychainErrorCode: String, CaseIterable {
     case userCanceled = "USER_CANCELED"
     case noPassword = "NO_PASSWORD"
+    case notAvailable = "NOT_AVAILABLE"
+    case inputPasswordInvalid = "INPUT_PASSWORD_INVALID"
+    case inputValueInvalid = "INPUT_VALUE_INVALID"
     case unexpectedPasswordData = "UNEXPECTED_PASSWORD_DATA"
+    case unhandledException = "UNHANDLED_EXCEPTION"
 }
 
 enum KeychainError: Error, LocalizedError, CustomNSError {

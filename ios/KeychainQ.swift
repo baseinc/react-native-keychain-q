@@ -35,7 +35,7 @@ class KeychainQ: NSObject {
             let biometryType = try supportedBiometryType()
             resolver(biometryType)
         } catch {
-            rejecter(#function, error.localizedDescription, error)
+            rejecter(rejectErrorCode(.notAvailable), error.localizedDescription, error)
         }
     }
 
@@ -45,7 +45,16 @@ class KeychainQ: NSObject {
             try save(server: server, account: account, password: password, options: options ?? [:])
             resolver(true)
         } catch {
-            rejecter(#function, error.localizedDescription, error)
+            switch error {
+            case KeychainError.noPassword:
+                rejecter(rejectErrorCode(.inputPasswordInvalid), error.localizedDescription, error)
+            case KeychainError.invalidInputData:
+                rejecter(rejectErrorCode(.inputValueInvalid), error.localizedDescription, error)
+            case KeychainError.unhandledError(status: let status) where status == errSecUserCanceled:
+                rejecter(rejectErrorCode(.userCanceled), error.localizedDescription, error)
+            default:
+                rejecter(rejectErrorCode(.unhandledException), error.localizedDescription, error)
+            }
         }
     }
 
@@ -55,7 +64,12 @@ class KeychainQ: NSObject {
             try remove(server: server, account: account, options: options ?? [:])
             resolver(true)
         } catch {
-            rejecter(#function, error.localizedDescription, error)
+            switch error {
+            case KeychainError.invalidInputData:
+                rejecter(rejectErrorCode(.inputValueInvalid), error.localizedDescription, error)
+            default:
+                rejecter(rejectErrorCode(.unhandledException), error.localizedDescription, error)
+            }
         }
     }
 
@@ -64,7 +78,12 @@ class KeychainQ: NSObject {
         do {
             resolver(try contains(server: server, options: options))
         } catch {
-            rejecter(#function, error.localizedDescription, error)
+            switch error {
+            case KeychainError.invalidInputData:
+                rejecter(rejectErrorCode(.inputValueInvalid), error.localizedDescription, error)
+            default:
+                rejecter(rejectErrorCode(.unhandledException), error.localizedDescription, error)
+            }
         }
     }
 
@@ -79,7 +98,16 @@ class KeychainQ: NSObject {
             let dict = try JSONSerialization.jsonObject(with: data, options: [.allowFragments])
             resolver(dict)
         } catch {
-            rejecter(#function, error.localizedDescription, error)
+            switch error {
+            case KeychainError.invalidInputData:
+                rejecter(rejectErrorCode(.inputValueInvalid), error.localizedDescription, error)
+            case KeychainError.unexpectedPasswordData, EncodingError.invalidValue:
+                rejecter(rejectErrorCode(.unexpectedPasswordData), error.localizedDescription, error)
+            case KeychainError.unhandledError(status: let status) where status == errSecUserCanceled:
+                rejecter(rejectErrorCode(.userCanceled), error.localizedDescription, error)
+            default:
+                rejecter(rejectErrorCode(.unhandledException), error.localizedDescription, error)
+            }
         }
     }
 
@@ -89,7 +117,12 @@ class KeychainQ: NSObject {
             try reset(server: server, options: options)
             resolver(true)
         } catch {
-            rejecter(#function, error.localizedDescription, error)
+            switch error {
+            case KeychainError.invalidInputData:
+                rejecter(rejectErrorCode(.inputValueInvalid), error.localizedDescription, error)
+            default:
+                rejecter(rejectErrorCode(.unhandledException), error.localizedDescription, error)
+            }
         }
     }
 
@@ -101,7 +134,16 @@ class KeychainQ: NSObject {
             let array = collection.compactMap({ try? encoder.encode($0) }).compactMap({ try? JSONSerialization.jsonObject(with: $0, options: [.allowFragments])})
             resolver(array)
         } catch {
-            rejecter(#function, error.localizedDescription, error)
+            switch error {
+            case KeychainError.invalidInputData:
+                rejecter(rejectErrorCode(.inputValueInvalid), error.localizedDescription, error)
+            case KeychainError.unexpectedPasswordData, EncodingError.invalidValue:
+                rejecter(rejectErrorCode(.unexpectedPasswordData), error.localizedDescription, error)
+            case KeychainError.unhandledError(status: let status) where status == errSecUserCanceled:
+                rejecter(rejectErrorCode(.userCanceled), error.localizedDescription, error)
+            default:
+                rejecter(rejectErrorCode(.unhandledException), error.localizedDescription, error)
+            }
         }
     }
 }
@@ -120,6 +162,10 @@ extension KeychainQ {
 }
 
 extension KeychainQ {
+
+    func rejectErrorCode(_ code: KeychainErrorCode) -> String {
+        return code.rawValue
+    }
 
     var constants: [ConstantKeys: Any] {
         return [
