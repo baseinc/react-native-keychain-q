@@ -25,10 +25,17 @@ enum KeychainErrorCode: String, CaseIterable {
     }
 }
 
+func formatInvalidConstantDataMessage(field: String, value: Any, category: String, correctValue: Any) -> String {
+    return """
+    The given data was not valid. \(field) was \(value). The correct value are \(category) of \(correctValue)
+    """
+}
+
 enum KeychainError: Error, LocalizedError, CustomNSError {
     case noPassword
     case unexpectedPasswordData
     case invalidInputData(message: String)
+    case policyCannotBeEvaluated
     case unhandledError(status: OSStatus)
 
     static var errorDomain: String {
@@ -43,6 +50,8 @@ enum KeychainError: Error, LocalizedError, CustomNSError {
             return -132
         case .invalidInputData:
             return -133
+        case .policyCannotBeEvaluated:
+            return -134
         case .unhandledError(status: let status):
             return Int(status)
         }
@@ -56,6 +65,8 @@ enum KeychainError: Error, LocalizedError, CustomNSError {
             return "Unexpected password data."
         case .invalidInputData(message: let message):
             return message
+        case .policyCannotBeEvaluated:
+            return "LAPolicy cannot be evaluated."
         case .unhandledError(status: let status):
             if #available(iOS 11.3, *) {
                 return SecCopyErrorMessageString(status, nil) as String? ?? "Unknown error."
@@ -154,12 +165,29 @@ struct WriteAttributes: ItemDecodable {
         case accessControls
     }
 
-    let accessible: String?
-    let accessControls: [String]?
+    let accessible: Accessible?
+    let accessControls: [AccessControlConstraints]?
 
-    init(item: Any) {
-        self.accessible = type(of: self).decodeStringIfPresent(item, for: .accessible)
-        self.accessControls = type(of: self).decodeStringArrayIfPresent(item, for: .accessControls)
+    init(item: Any) throws {
+        if let rawValue = type(of: self).decodeStringIfPresent(item, for: .accessible) {
+            guard let accessible = Accessible(rawValue: rawValue) else { throw KeychainError.invalidInputData(message:
+                formatInvalidConstantDataMessage(field: "\(ItemCodingKeys.accessible)", value: rawValue, category: "one", correctValue: Accessible.allRawValues.joined(separator: ","))) }
+            self.accessible = accessible
+        } else {
+            self.accessible = nil
+        }
+        if let rawValues = type(of: self).decodeStringArrayIfPresent(item, for: .accessControls), !rawValues.isEmpty {
+            let accessControls = rawValues.compactMap { AccessControlConstraints(rawValue: $0) }
+            let validRawValues = accessControls.map { $0.rawValue }
+            let invalidRawValues = rawValues.filter { !validRawValues.contains($0) }
+            guard invalidRawValues.isEmpty else {
+                throw KeychainError.invalidInputData(message:
+                    formatInvalidConstantDataMessage(field: "\(ItemCodingKeys.accessControls)", value: "\(rawValues)", category: "some", correctValue: "\(AccessControlConstraints.allRawValues.joined(separator: ", "))"))
+            }
+            self.accessControls = accessControls
+        } else {
+            self.accessControls = nil
+        }
     }
 }
 
@@ -172,12 +200,17 @@ struct CommonAttributes: ItemDecodable {
 
     let accessGroup: String?
     let authenticationPrompt: String?
-    let deviceOwnerAuthPolicy: String?
+    let deviceOwnerAuthPolicy: DeviceOwnerAuthPolicy?
 
-    init(item: Any) {
+    init(item: Any) throws {
         self.accessGroup = type(of: self).decodeStringIfPresent(item, for: .accessGroup)
         self.authenticationPrompt = type(of: self).decodeStringIfPresent(item, for: .authenticationPrompt)
-        self.deviceOwnerAuthPolicy = type(of: self).decodeStringIfPresent(item, for: .deviceOwnerAuthPolicy)
+        if let rawValue = type(of: self).decodeStringIfPresent(item, for: .deviceOwnerAuthPolicy) {
+            guard let policy = DeviceOwnerAuthPolicy(rawValue: rawValue) else { throw KeychainError.invalidInputData(message: "Invalid input: \(ItemCodingKeys.deviceOwnerAuthPolicy) was \(rawValue). The correct value is one of [\(DeviceOwnerAuthPolicy.allRawValues.joined(separator: ", "))]") }
+            self.deviceOwnerAuthPolicy = policy
+        } else {
+            self.deviceOwnerAuthPolicy = nil
+        }
     }
 }
 
@@ -189,7 +222,8 @@ struct InternetPasswordQueryBuilder {
     }
 
     init(serverString: String) throws {
-        guard let url = parseURLString(serverString) else { throw KeychainError.invalidInputData(message: "input value `server` is not found") }
+        guard let url = parseURLString(serverString) else { throw KeychainError.invalidInputData(message:
+            "The given data was not valid. `server` is not found") }
         self.query = [
             kSecClass as String: kSecClassInternetPassword,
         ]
@@ -228,12 +262,12 @@ struct InternetPasswordQueryBuilder {
         var mQuery: [String: Any] = [:]
         mQuery[kSecAttrAccount as String] = account
         var accessible: String?
-        var accessControls: [AccessControlConstraints] = []
-        if let rawValue = attributes.accessible, let typedAccessible = Accessible(rawValue: rawValue) {
-            accessible = typedAccessible.dataValue
+        if let inputAccessible = attributes.accessible {
+            accessible = inputAccessible.dataValue
         }
-        if let rawValues = attributes.accessControls {
-            accessControls = rawValues.compactMap { AccessControlConstraints(rawValue: $0) }
+        var accessControls: [AccessControlConstraints] = []
+        if let inputAccessControls = attributes.accessControls {
+            accessControls = inputAccessControls
         }
         if accessControls.isEmpty {
             if let accessible = accessible {

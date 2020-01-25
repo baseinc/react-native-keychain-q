@@ -11,7 +11,7 @@ import Security
 import LocalAuthentication
 
 /// - Note: Reference [Accessibility Values](https://developer.apple.com/documentation/security/keychain_services/keychain_items/item_attribute_keys_and_values)
-enum Accessible: String {
+enum Accessible: String, CaseIterable {
     case whenPasscodeSetThisDeviceOnly
     case whenUnlockedThisDeviceOnly
     case whenUnlocked
@@ -32,14 +32,16 @@ enum Accessible: String {
             return String(kSecAttrAccessibleAfterFirstUnlock)
         }
     }
+
+    static var allRawValues: [String] {
+        return allCases.map { $0.rawValue }
+    }
 }
 
 /// - Note: Reference [SecAccessControlCreateFlags](https://developer.apple.com/documentation/security/secaccesscontrolcreateflags)
-enum AccessControlConstraints: String {
+enum AccessControlConstraints: String, CaseIterable {
     case devicePasscode
-    @available(iOS 11.3, *)
     case biometryAny
-    @available(iOS 11.3, *)
     case biometryCurrentSet
     case userPresence
     case applicationPassword
@@ -67,6 +69,10 @@ enum AccessControlConstraints: String {
         case .applicationPassword:
             return .applicationPassword
         }
+    }
+
+    static var allRawValues: [String] {
+        return allCases.map { $0.rawValue }
     }
 }
 
@@ -106,5 +112,10 @@ enum DeviceOwnerAuthPolicy: String, CaseIterable {
 
     static var allRawValues: [String] {
         return allCases.map { $0.rawValue }
+    }
+
+    static var validRawValues: [String] {
+        let rejects: [DeviceOwnerAuthPolicy] = [.none]
+        return allCases.filter { !rejects.contains($0) }.map { $0.rawValue }
     }
 }

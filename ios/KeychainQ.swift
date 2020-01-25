@@ -47,7 +47,7 @@ class KeychainQ: NSObject {}
             switch error {
             case KeychainError.noPassword:
                 rejecter(rejectErrorCode(.inputPasswordInvalid), error.localizedDescription, error)
-            case KeychainError.invalidInputData:
+            case KeychainError.invalidInputData, KeychainError.policyCannotBeEvaluated:
                 rejecter(rejectErrorCode(.inputValueInvalid), error.localizedDescription, error)
             case KeychainError.unhandledError(status: let status) where status == errSecUserCanceled:
                 rejecter(rejectErrorCode(.userCanceled), error.localizedDescription, error)
@@ -147,7 +147,7 @@ class KeychainQ: NSObject {}
 extension KeychainQ {
 
     func matchingInternetPasswordQueryBuilder(server: String?, options: Any) throws -> InternetPasswordQueryBuilder {
-        let commonAttrs = CommonAttributes(item: options)
+        let commonAttrs = try CommonAttributes(item: options)
         if let server = server {
             return try InternetPasswordQueryBuilder(serverString: server)
                 .with(commonAttributes: commonAttrs)
@@ -160,6 +160,17 @@ extension KeychainQ {
         var error: NSError?
         let canBeprotected = context.canEvaluatePolicy(policy, error: &error)
         return (canBeprotected, error)
+    }
+
+    func validateDeviceAuthPolicy(policy: LAPolicy) throws {
+        let context = LAContext()
+        let (canBeProtected, error) = canUseAuthPolicy(context: context, policy: policy)
+        guard canBeProtected, error == nil else {
+            if let error = error {
+                throw error
+            }
+            throw KeychainError.policyCannotBeEvaluated
+        }
     }
 }
 
@@ -178,7 +189,8 @@ extension KeychainQ {
     }
 
     func canUseDeviceAuthPolicy(rawValue: String) throws -> Bool {
-        guard let policy = DeviceOwnerAuthPolicy(rawValue: rawValue), let laPolicy = policy.dataValue else { throw KeychainError.invalidInputData(message: "Invalid input:  `\(InternalConstantKeys.deviceOwnerAuthPolicy.rawValue)` was `\(rawValue)`. The correct value is one of [\(DeviceOwnerAuthPolicy.allRawValues.filter { $0 != DeviceOwnerAuthPolicy.none.rawValue }.joined(separator: ", "))].") }
+        guard let policy = DeviceOwnerAuthPolicy(rawValue: rawValue), let laPolicy = policy.dataValue else { throw KeychainError.invalidInputData(message: formatInvalidConstantDataMessage(field: "\(InternalConstantKeys.deviceOwnerAuthPolicy)", value: rawValue, category: "one", correctValue: "\(DeviceOwnerAuthPolicy.validRawValues.joined(separator: ", "))"))
+        }
         let context = LAContext()
         let (canBeProtected, error) = canUseAuthPolicy(context: context, policy: laPolicy)
         if error == nil && canBeProtected {
@@ -201,8 +213,12 @@ extension KeychainQ {
 
     func save(server: String, account: String, password: String, options: Any) throws {
         guard let passwordData = password.data(using: .utf8) else { throw KeychainError.unexpectedPasswordData }
-        let commontAttrs = CommonAttributes(item: options)
-        let writeAttrs = WriteAttributes(item: options)
+        let commontAttrs = try CommonAttributes(item: options)
+        // Pre-check policy evaluation
+        if let inputPolicy = commontAttrs.deviceOwnerAuthPolicy, let policy = inputPolicy.dataValue {
+            try validateDeviceAuthPolicy(policy: policy)
+        }
+        let writeAttrs = try WriteAttributes(item: options)
         let queryBuilder = try InternetPasswordQueryBuilder(serverString: server)
             .with(commonAttributes: commontAttrs)
         let readQuery = queryBuilder
@@ -225,7 +241,7 @@ extension KeychainQ {
     }
 
     func remove(server: String, account: String, options: Any) throws {
-        let commonAttrs = CommonAttributes(item: options)
+        let commonAttrs = try CommonAttributes(item: options)
         let query = try InternetPasswordQueryBuilder(serverString: server)
             .with(commonAttributes: commonAttrs)
             .with(account: account)
@@ -266,7 +282,7 @@ extension KeychainQ {
     }
 
     func get(server: String, options: Any) throws -> InternetCredentials? {
-        guard let account = AccountAttribute(item: options) else { throw KeychainError.invalidInputData(message: "input value `account` is not found") }
+        guard let account = AccountAttribute(item: options) else { throw KeychainError.invalidInputData(message: "The given data was not valid. `account` is not found") }
         let query = try matchingInternetPasswordQueryBuilder(server: server, options: options)
             .with(account: account.rawValue)
             .with(attributes: [
