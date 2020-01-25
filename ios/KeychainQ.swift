@@ -90,6 +90,7 @@ class KeychainQ: NSObject {}
                 return resolver(nil)
             }
             let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .millisecondsSince1970
             let data = try encoder.encode(credentials)
             let dict = try JSONSerialization.jsonObject(with: data, options: [.allowFragments])
             resolver(dict)
@@ -125,6 +126,7 @@ class KeychainQ: NSObject {}
         do {
             let collection = try retrieve(server: server, options: options)
             let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .millisecondsSince1970
             let array = collection.compactMap { try? encoder.encode($0) }.compactMap { try? JSONSerialization.jsonObject(with: $0, options: [.allowFragments]) }
             resolver(array)
         } catch {
@@ -167,15 +169,16 @@ extension KeychainQ {
         return code.rawValue
     }
 
-    var constants: [ConstantKeys: Any] {
+    var constants: [ExternConstantKeys: Any] {
         return [
             // To handling when user canceled on authentication prompt.
             .authenticationUserCanceledCode: Int(errSecUserCanceled),
+            .keychainErrorCodes: KeychainErrorCode.allRawKeyValues,
         ]
     }
 
     func canUseDeviceAuthPolicy(rawValue: String) throws -> Bool {
-        guard let policy = DeviceOwnerAuthPolicy(rawValue: rawValue), let laPolicy = policy.dataValue else { throw KeychainError.invalidInputData(message: "Invalid input:  `\(ConstantKeys.deviceOwnerAuthPolicy.rawValue)` was `\(rawValue)`. The correct value is one of [\(DeviceOwnerAuthPolicy.allRawValues.filter { $0 != DeviceOwnerAuthPolicy.none.rawValue }.joined(separator: ", "))].") }
+        guard let policy = DeviceOwnerAuthPolicy(rawValue: rawValue), let laPolicy = policy.dataValue else { throw KeychainError.invalidInputData(message: "Invalid input:  `\(InternalConstantKeys.deviceOwnerAuthPolicy.rawValue)` was `\(rawValue)`. The correct value is one of [\(DeviceOwnerAuthPolicy.allRawValues.filter { $0 != DeviceOwnerAuthPolicy.none.rawValue }.joined(separator: ", "))].") }
         let context = LAContext()
         let (canBeProtected, error) = canUseAuthPolicy(context: context, policy: laPolicy)
         if error == nil && canBeProtected {

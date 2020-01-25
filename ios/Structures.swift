@@ -17,6 +17,12 @@ enum KeychainErrorCode: String, CaseIterable {
     case inputValueInvalid = "INPUT_VALUE_INVALID"
     case unexpectedPasswordData = "UNEXPECTED_PASSWORD_DATA"
     case unhandledException = "UNHANDLED_EXCEPTION"
+
+    static var allRawKeyValues: [String: String] {
+        return allCases.reduce(into: [String: String]()) { result, item in
+            result["\(item)"] = item.rawValue
+        }
+    }
 }
 
 enum KeychainError: Error, LocalizedError, CustomNSError {
@@ -64,6 +70,8 @@ enum KeychainError: Error, LocalizedError, CustomNSError {
 protocol Credentials {
     var account: String { get }
     var password: String { get }
+    var createdAt: Date { get }
+    var modifiedAt: Date { get }
 }
 
 struct InternetCredentials: Credentials, Encodable {
@@ -72,12 +80,16 @@ struct InternetCredentials: Credentials, Encodable {
         case port
         case account
         case password
+        case createdAt
+        case modifiedAt
     }
 
     let server: String
     let port: Int?
     let account: String
     let password: String
+    let createdAt: Date
+    let modifiedAt: Date
 
     init(item: Any) throws {
         guard let existingItem = item as? [String: Any],
@@ -88,9 +100,15 @@ struct InternetCredentials: Credentials, Encodable {
             throw KeychainError.unexpectedPasswordData
         }
         self.server = server
-        self.port = existingItem[kSecAttrPort as String] as? Int
+        if let port = existingItem[kSecAttrPort as String] as? Int, port > 0 {
+            self.port = port
+        } else {
+            self.port = nil
+        }
         self.account = account
         self.password = password
+        self.createdAt = existingItem[kSecAttrCreationDate as String] as! Date
+        self.modifiedAt = existingItem[kSecAttrModificationDate as String] as! Date
     }
 
     func encode(to encoder: Encoder) throws {
@@ -99,16 +117,17 @@ struct InternetCredentials: Credentials, Encodable {
         try container.encodeIfPresent(port, forKey: .port)
         try container.encode(account, forKey: .account)
         try container.encode(password, forKey: .password)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(modifiedAt, forKey: .modifiedAt)
     }
 }
 
-struct SearchConditions {
-    let accessGroup: String?
-    let attributesOnly: Bool?
+enum ExternConstantKeys: String, CodingKey {
+    case authenticationUserCanceledCode
+    case keychainErrorCodes
 }
 
-enum ConstantKeys: String, CodingKey {
-    case authenticationUserCanceledCode
+enum InternalConstantKeys: String, CodingKey {
     case deviceOwnerAuthPolicy
 }
 
