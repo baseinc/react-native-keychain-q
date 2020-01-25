@@ -11,7 +11,7 @@ import Security
 import LocalAuthentication
 
 /// - Note: Reference [Accessibility Values](https://developer.apple.com/documentation/security/keychain_services/keychain_items/item_attribute_keys_and_values)
-enum Accessible: String, CaseIterable {
+enum Accessible: String {
     case whenPasscodeSetThisDeviceOnly
     case whenUnlockedThisDeviceOnly
     case whenUnlocked
@@ -70,7 +70,7 @@ enum AccessControlConstraints: String {
     }
 }
 
-enum BiometryTypeLabel: String, CaseIterable {
+enum BiometryTypeLabel: String {
     case touchID
     case faceID
     case none
@@ -85,5 +85,26 @@ enum BiometryTypeLabel: String, CaseIterable {
         default:
             self = .none
         }
+    }
+}
+
+enum DeviceOwnerAuthPolicy: String, CaseIterable {
+    case biometrics
+    case any
+    case none
+
+    var dataValue: LAPolicy? {
+        switch self {
+        case .biometrics:
+            return .deviceOwnerAuthenticationWithBiometrics
+        case .any:
+            return .deviceOwnerAuthentication
+        default:
+            return nil
+        }
+    }
+
+    static var allRawValues: [String] {
+        return allCases.map({ $0.rawValue })
     }
 }

@@ -30,13 +30,18 @@ class KeychainQ: NSObject {
 @objc extension KeychainQ {
 
     @objc
-    func fetchSupportedBiometryType(_ resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
+    func fetchCanUseDeviceAuthPolicy(_ rawValue: String, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         do {
-            let biometryType = try supportedBiometryType()
-            resolver(biometryType)
+            let result = try canUseDeviceAuthPolicy(rawValue: rawValue)
+            resolver(result)
         } catch {
-            rejecter(rejectErrorCode(.notAvailable), error.localizedDescription, error)
+            rejecter(rejectErrorCode(.inputValueInvalid), error.localizedDescription, error)
         }
+    }
+
+    @objc
+    func fetchSupportedBiometryType(_ resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
+        resolver(supportedBiometryType())
     }
 
     @objc
@@ -159,6 +164,12 @@ extension KeychainQ {
         return InternetPasswordQueryBuilder()
             .with(commonAttributes: commonAttrs)
     }
+
+    func canUseAuthPolicy(context: LAContext, policy: LAPolicy) -> (Bool, Error?) {
+        var error: NSError?
+        let canBeprotected = context.canEvaluatePolicy(policy, error: &error)
+        return (canBeprotected, error)
+    }
 }
 
 extension KeychainQ {
@@ -174,18 +185,24 @@ extension KeychainQ {
         ]
     }
 
-    func supportedBiometryType() throws -> String {
+    func canUseDeviceAuthPolicy(rawValue: String) throws -> Bool {
+        guard let policy = DeviceOwnerAuthPolicy(rawValue: rawValue), let laPolicy = policy.dataValue else { throw KeychainError.invalidInputData(message: "Invalid input:  `\(ConstantKeys.deviceOwnerAuthPolicy.rawValue)` was `\(rawValue)`. The correct value is one of [\(DeviceOwnerAuthPolicy.allRawValues.filter({ $0 != DeviceOwnerAuthPolicy.none.rawValue }).joined(separator: ", "))].") }
         let context = LAContext()
-        var error: NSError?
-        let canBeProtected = context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error)
+        let (canBeProtected, error) = canUseAuthPolicy(context: context, policy: laPolicy)
+        if error == nil && canBeProtected {
+            return true
+        }
+        return false
+    }
+
+    func supportedBiometryType() -> String {
+        let context = LAContext()
+        let (canBeProtected, error) = canUseAuthPolicy(context: context, policy: .deviceOwnerAuthentication)
         if error == nil && canBeProtected {
             if #available(iOS 11.0, *) {
                 return BiometryTypeLabel(biometryType: context.biometryType).rawValue
             }
             return BiometryTypeLabel.touchID.rawValue
-        }
-        if let error = error {
-            throw error
         }
         return BiometryTypeLabel.none.rawValue
     }

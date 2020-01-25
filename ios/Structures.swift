@@ -109,6 +109,7 @@ struct SearchConditions {
 
 enum ConstantKeys: String, CodingKey {
     case authenticationUserCanceledCode
+    case deviceOwnerAuthPolicy
 }
 
 struct AccountAttribute: RawRepresentable, ItemDecodable {
@@ -146,13 +147,16 @@ struct CommonAttributes: ItemDecodable {
     enum ItemCodingKeys: String, CodingKey {
         case accessGroup
         case authenticationPrompt
+        case deviceOwnerAuthPolicy
     }
     let accessGroup: String?
     let authenticationPrompt: String?
+    let deviceOwnerAuthPolicy: String?
 
     init(item: Any) {
         self.accessGroup = type(of: self).decodeStringIfPresent(item, for: .accessGroup)
         self.authenticationPrompt = type(of: self).decodeStringIfPresent(item, for: .authenticationPrompt)
+        self.deviceOwnerAuthPolicy = type(of: self).decodeStringIfPresent(item, for: .deviceOwnerAuthPolicy)
     }
 }
 
