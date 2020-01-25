@@ -105,7 +105,7 @@ extension ItemDecodable where ItemCodingKeys.RawValue == String {
         guard let item = item as? [String: Any] else { return nil }
         let value = item[key.rawValue]
         if let value = value as? [Any] {
-            return value.compactMap({ convertToString(value: $0) })
+            return value.compactMap { convertToString(value: $0) }
         } else if let value = convertToString(value: value) {
             return [value]
         }

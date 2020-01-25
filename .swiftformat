@@ -1,0 +1,8 @@
+--allman false
+--disable ranges,blankLinesAtStartOfScope,blankLinesAroundMark,hoistPatternLet,redundantSelf,sortedImports,strongOutlets,unusedArguments,redundantBackticks,trailingCommas,andOperator,redundantReturn
+--exclude Pods,Generated,Carthage,DerivedData
+--exclude example
+--ifdef noindent
+--comments ignore
+--wrapcollections beforefirst
+--swiftversion 5.1

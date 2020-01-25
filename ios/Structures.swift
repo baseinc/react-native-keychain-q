@@ -85,7 +85,7 @@ struct InternetCredentials: Credentials, Encodable {
             let password = String(data: passwordData, encoding: .utf8),
             let account = existingItem[kSecAttrAccount as String] as? String,
             let server = existingItem[kSecAttrServer as String] as? String else {
-                throw KeychainError.unexpectedPasswordData
+            throw KeychainError.unexpectedPasswordData
         }
         self.server = server
         self.port = existingItem[kSecAttrPort as String] as? Int
@@ -134,6 +134,7 @@ struct WriteAttributes: ItemDecodable {
         case accessible
         case accessControls
     }
+
     let accessible: String?
     let accessControls: [String]?
 
@@ -149,6 +150,7 @@ struct CommonAttributes: ItemDecodable {
         case authenticationPrompt
         case deviceOwnerAuthPolicy
     }
+
     let accessGroup: String?
     let authenticationPrompt: String?
     let deviceOwnerAuthPolicy: String?
@@ -166,6 +168,7 @@ struct InternetPasswordQueryBuilder {
     init(attributes: [String: Any] = [:]) {
         self.query = attributes.merging([kSecClass as String: kSecClassInternetPassword], uniquingKeysWith: { $1 })
     }
+
     init(serverString: String) throws {
         guard let url = parseURLString(serverString) else { throw KeychainError.invalidInputData(message: "input value `server` is not found") }
         self.query = [
@@ -211,7 +214,7 @@ struct InternetPasswordQueryBuilder {
             accessible = typedAccessible.dataValue
         }
         if let rawValues = attributes.accessControls {
-            accessControls = rawValues.compactMap({ AccessControlConstraints(rawValue: $0) })
+            accessControls = rawValues.compactMap { AccessControlConstraints(rawValue: $0) }
         }
         if accessControls.isEmpty {
             if let accessible = accessible {
@@ -239,4 +242,3 @@ struct InternetPasswordQueryBuilder {
         return type(of: self).init(attributes: query.merging(mQuery, uniquingKeysWith: { $1 }))
     }
 }
-

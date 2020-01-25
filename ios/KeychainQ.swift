@@ -11,25 +11,21 @@ import Security
 import LocalAuthentication
 
 @objc(KeychainQ)
-class KeychainQ: NSObject {
+class KeychainQ: NSObject {}
 
-    @objc
+// MARK: - Public Bridging API
+@objc extension KeychainQ {
+
+    static func requiresMainQueueSetup() -> Bool {
+        return false
+    }
+
     func constantsToExport() -> [AnyHashable: Any]! {
         return constants.reduce(into: [AnyHashable: Any]()) { result, item in
             result[item.key.rawValue] = item.value
         }
     }
 
-    @objc
-    static func requiresMainQueueSetup() -> Bool {
-        return false
-    }
-}
-
-// MARK: - Public Bridging API
-@objc extension KeychainQ {
-
-    @objc
     func fetchCanUseDeviceAuthPolicy(_ rawValue: String, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         do {
             let result = try canUseDeviceAuthPolicy(rawValue: rawValue)
@@ -39,12 +35,10 @@ class KeychainQ: NSObject {
         }
     }
 
-    @objc
     func fetchSupportedBiometryType(_ resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         resolver(supportedBiometryType())
     }
 
-    @objc
     func saveInternetPassword(_ server: String, account: String, password: String, options: [String: Any]?, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         do {
             try save(server: server, account: account, password: password, options: options ?? [:])
@@ -63,7 +57,6 @@ class KeychainQ: NSObject {
         }
     }
 
-    @objc
     func removeInternetPassword(_ server: String, account: String, options: [String: Any]?, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         do {
             try remove(server: server, account: account, options: options ?? [:])
@@ -78,7 +71,6 @@ class KeychainQ: NSObject {
         }
     }
 
-    @objc
     func containsAnyInternetPassword(_ server: String, options: [String: Any], resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         do {
             resolver(try contains(server: server, options: options))
@@ -92,7 +84,6 @@ class KeychainQ: NSObject {
         }
     }
 
-    @objc
     func findInternetPassword(_ server: String, options: [String: Any], resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         do {
             guard let credentials = try get(server: server, options: options) else {
@@ -116,7 +107,6 @@ class KeychainQ: NSObject {
         }
     }
 
-    @objc
     func resetInternetPasswords(_ server: String?, options: [String: Any], resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         do {
             try reset(server: server, options: options)
@@ -131,12 +121,11 @@ class KeychainQ: NSObject {
         }
     }
 
-    @objc
     func retrieveInternetPasswords(_ server: String?, options: [String: Any], resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         do {
             let collection = try retrieve(server: server, options: options)
             let encoder = JSONEncoder()
-            let array = collection.compactMap({ try? encoder.encode($0) }).compactMap({ try? JSONSerialization.jsonObject(with: $0, options: [.allowFragments])})
+            let array = collection.compactMap { try? encoder.encode($0) }.compactMap { try? JSONSerialization.jsonObject(with: $0, options: [.allowFragments]) }
             resolver(array)
         } catch {
             switch error {
@@ -186,7 +175,7 @@ extension KeychainQ {
     }
 
     func canUseDeviceAuthPolicy(rawValue: String) throws -> Bool {
-        guard let policy = DeviceOwnerAuthPolicy(rawValue: rawValue), let laPolicy = policy.dataValue else { throw KeychainError.invalidInputData(message: "Invalid input:  `\(ConstantKeys.deviceOwnerAuthPolicy.rawValue)` was `\(rawValue)`. The correct value is one of [\(DeviceOwnerAuthPolicy.allRawValues.filter({ $0 != DeviceOwnerAuthPolicy.none.rawValue }).joined(separator: ", "))].") }
+        guard let policy = DeviceOwnerAuthPolicy(rawValue: rawValue), let laPolicy = policy.dataValue else { throw KeychainError.invalidInputData(message: "Invalid input:  `\(ConstantKeys.deviceOwnerAuthPolicy.rawValue)` was `\(rawValue)`. The correct value is one of [\(DeviceOwnerAuthPolicy.allRawValues.filter { $0 != DeviceOwnerAuthPolicy.none.rawValue }.joined(separator: ", "))].") }
         let context = LAContext()
         let (canBeProtected, error) = canUseAuthPolicy(context: context, policy: laPolicy)
         if error == nil && canBeProtected {
@@ -274,7 +263,7 @@ extension KeychainQ {
     }
 
     func get(server: String, options: Any) throws -> InternetCredentials? {
-        guard let account = AccountAttribute(item: options) else { throw KeychainError.invalidInputData(message: "input value `account` is not found")}
+        guard let account = AccountAttribute(item: options) else { throw KeychainError.invalidInputData(message: "input value `account` is not found") }
         let query = try matchingInternetPasswordQueryBuilder(server: server, options: options)
             .with(account: account.rawValue)
             .with(attributes: [
@@ -313,7 +302,7 @@ extension KeychainQ {
         switch status {
         case errSecSuccess, errSecInteractionNotAllowed:
             guard let result = result as? [Any] else { throw KeychainError.unexpectedPasswordData }
-            return result.compactMap({ try? InternetCredentials(item: $0) })
+            return result.compactMap { try? InternetCredentials(item: $0) }
         case errSecItemNotFound:
             return []
         default:

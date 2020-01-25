@@ -4,7 +4,8 @@
     "words": [
         "esnext",
         "keychain",
-        "q"
+        "q",
+        "swiftformat"
     ],
     "flagWords": [],
     "ignoreRegExpList": [

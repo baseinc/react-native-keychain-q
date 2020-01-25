@@ -105,6 +105,6 @@ enum DeviceOwnerAuthPolicy: String, CaseIterable {
     }
 
     static var allRawValues: [String] {
-        return allCases.map({ $0.rawValue })
+        return allCases.map { $0.rawValue }
     }
 }
