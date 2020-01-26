@@ -85,6 +85,21 @@ export type KeychainErrorCodes =
     | 'unexpectedPasswordData'
     | 'unhandledException';
 
+export type KeychainErrorInfoKeys = 'code' | 'message';
+
+export type KeychainErrorInfo = Readonly<
+    {
+        [P in KeychainErrorInfoKeys]: string;
+    } & {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        [key: string]: any;
+    }
+>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isKeychainErrorInfo = (arg: any): arg is KeychainErrorInfo =>
+    arg.code !== undefined && arg.message !== undefined;
+
 /**
  * @see https://github.com/react-native-community/react-native-device-info
  */

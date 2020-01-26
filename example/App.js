@@ -26,7 +26,8 @@ import {
   saveInternetPassword,
   findInternetPassword,
   removeInternetPassword,
-  biometryTypeLabel,
+  getBiometryTypeLabel,
+  retrieveInternetPasswords,
 } from 'react-native-keychain-q';
 
 const server = 'https://keychain-q.example.com';
@@ -37,8 +38,32 @@ const items = [
 
 export default function App() {
   const [debugLog, setDebugLog] = useState('-----');
+  const [retrieveRequired, setRetrieveRequired] = useState(true);
+  const [allCredentials, setAllCredentials] = useState([]);
+  useEffect(() => {
+    let ignored = false;
+    (async () => {
+      try {
+        if (ignored) {
+          return;
+        }
+        if (!retrieveRequired) {
+          return;
+        }
+        const all = await retrieveInternetPasswords(server);
+        console.log(all);
+        setRetrieveRequired(false);
+        setAllCredentials(all || []);
+      } catch (error) {
+        console.warn(error);
+      }
+    })();
+    return () => {
+      ignored = false;
+    };
+  }, [retrieveRequired]);
   const [useBiometry, setUseBiometry] = useState({
-    label: '',
+    label: undefined,
     disabled: true,
     used: false,
   });
@@ -48,7 +73,6 @@ export default function App() {
 
   const [biometryType, setBiometryType] = useState();
   useEffect(() => {
-    console.log(biometryTypeLabel);
     let ignored = false;
     (async () => {
       try {
@@ -56,7 +80,11 @@ export default function App() {
         if (!ignored) {
           setBiometryType(result);
           if (['faceID', 'touchID'].includes(result)) {
-            setUseBiometry(state => ({...state, disabled: false}));
+            setUseBiometry(state => ({
+              ...state,
+              label: getBiometryTypeLabel(biometryType),
+              disabled: false,
+            }));
           }
         }
       } catch (error) {
@@ -66,10 +94,10 @@ export default function App() {
     return () => {
       ignored = true;
     };
-  }, []);
+  }, [biometryType]);
+
   const addCallback = useCallback(
     index => {
-      let ignored = false;
       const item = items[index];
       (async () => {
         try {
@@ -82,65 +110,66 @@ export default function App() {
             : undefined;
           console.log(useBio);
           await saveInternetPassword(server, item.account, item.password, opts);
-          if (!ignored) {
-            setDebugLog('Added credentials ' + '#' + index);
-          }
+          setDebugLog('Added credentials ' + '#' + index);
+          setTimeout(() => {
+            setRetrieveRequired(true);
+          }, 1000);
         } catch (error) {
+          Object.getOwnPropertyNames(error).forEach(prop => {
+            console.log(prop + ' => ' + error[prop]);
+            if (prop === 'userInfo') {
+              console.log(JSON.stringify(error[prop], null, 2));
+            }
+          });
           console.warn(error);
         }
       })();
-      return () => {
-        ignored = true;
-      };
     },
     [useBiometry.used],
   );
   const readCallback = useCallback(index => {
-    let ignored = false;
     const item = items[index];
     (async () => {
       try {
         const credentials = await findInternetPassword(server, {
           account: item.account,
         });
-        if (!ignored) {
-          if (credentials) {
-            setDebugLog(
-              'Read credentials #' +
-                index +
-                ': ' +
-                credentials.account +
-                '/' +
-                credentials.password,
-            );
-          } else {
-            setDebugLog('Not found credentials #' + index);
-          }
+        if (credentials) {
+          setDebugLog(
+            'Read credentials #' +
+              index +
+              ': ' +
+              credentials.account +
+              '/' +
+              credentials.password,
+          );
+        } else {
+          setDebugLog('Not found credentials #' + index);
         }
       } catch (error) {
+        Object.getOwnPropertyNames(error).forEach(prop => {
+          console.log(prop + ' => ' + error[prop]);
+          if (prop === 'userInfo') {
+            console.log(JSON.stringify(error[prop], null, 2));
+          }
+        });
         console.warn(error);
       }
     })();
-    return () => {
-      ignored = true;
-    };
   }, []);
   const deleteCallback = useCallback(index => {
-    let ignored = false;
     const item = items[index];
     (async () => {
       try {
         await removeInternetPassword(server, item.account);
-        if (!ignored) {
-          setDebugLog('Deleted credentials ' + '#' + index);
-        }
+        setDebugLog('Deleted credentials ' + '#' + index);
+        setTimeout(() => {
+          setRetrieveRequired(true);
+        }, 0);
       } catch (error) {
         console.warn(error);
       }
     })();
-    return () => {
-      ignored = true;
-    };
   }, []);
 
   return (
@@ -186,7 +215,7 @@ export default function App() {
         <Text style={styles.welcome}>Biometry Type</Text>
         <View style={styles.instructionsWCtrlContainer}>
           <Text style={[styles.instructions, styles.instructionsWCtrl]}>
-            {biometryType ? biometryTypeLabel[biometryType].label : 'UNKNOWN'}
+            {useBiometry.label && 'Use ' + useBiometry.label + ' when adding'}
           </Text>
           <Switch
             value={useBiometry.used}
@@ -194,170 +223,17 @@ export default function App() {
             onValueChange={useBiometrySwitchOnChange}
           />
         </View>
+        <Text style={styles.welcome}>Read all credentials from keychain</Text>
+        {allCredentials.map((item, index) => (
+          <View style={styles.instructionsWCtrlContainer} key={index}>
+            <Text style={styles.instructions}>{item.account}</Text>
+            <Text style={styles.instructions}>{item.password}</Text>
+          </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-// export class Hoge extends React.Component {
-//     state = {
-//         status: 'starting',
-//         message: '--',
-//         existsAnyAccount: '',
-//         existsAccount: '',
-//         notExistsAccount: '',
-//         credentials: null,
-//         allCredentials: [],
-//     };
-//     componentDidMount() {
-//         (async () => {
-//             try {
-//                 console.log('constant', KeychainQ.keychainErrorCodes);
-//                 const t = await KeychainQ.fetchSupportedBiometryType();
-
-//                 this.setState({biometryType: t});
-
-//                 await KeychainQ.saveInternetPassword(
-//                     server,
-//                     creds[0].account,
-//                     creds[0].password,
-//                     {accessible: 'whenUnlocked'},
-//                 );
-//                 await KeychainQ.saveInternetPassword(
-//                     server,
-//                     creds[1].account,
-//                     creds[1].password,
-//                     {
-//                         accessible: 'afterFirstUnlock',
-//                         accessControls: ['userPresence'],
-//                         deviceOwnerAuthPolicy: 'biometrics',
-//                     },
-//                 );
-//                 const existsAnyAccount = await KeychainQ.containsAnyInternetPassword(
-//                     server,
-//                     {},
-//                 );
-//                 const existsAccount = await KeychainQ.containsAnyInternetPassword(
-//                     server,
-//                     {account: creds[0].account},
-//                 );
-//                 const notExistsAccount = await KeychainQ.containsAnyInternetPassword(
-//                     server,
-//                     {account: 'foo'},
-//                 );
-//                 const credentials = await KeychainQ.findInternetPassword(
-//                     server,
-//                     {
-//                         account: creds[0].account,
-//                     },
-//                 );
-//                 const allCredentials = await KeychainQ.retrieveInternetPasswords(
-//                     server,
-//                     {authenticationPrompt: 'this is a test!!!!!11'},
-//                 );
-//                 await KeychainQ.retrieveInternetPasswords(server, {});
-//                 this.setState({
-//                     biometryType: t,
-//                     existsAnyAccount: existsAnyAccount
-//                         ? 'exists'
-//                         : 'not exists',
-//                     existsAccount: existsAccount ? 'exists' : 'not exists',
-//                     notExistsAccount: notExistsAccount
-//                         ? 'exists'
-//                         : 'not exists',
-//                     credentials: credentials,
-//                     allCredentials: allCredentials
-//                         .map(item =>
-//                             [
-//                                 'account=',
-//                                 item.account,
-//                                 ', password=',
-//                                 item.password,
-//                             ].join(''),
-//                         )
-//                         .join('\n'),
-//                 });
-
-//                 setTimeout(async () => {
-//                     const cred = await KeychainQ.findInternetPassword(server, {
-//                         account: creds[0].account,
-//                     });
-//                     console.log(cred);
-//                     const result = await KeychainQ.resetInternetPasswords(
-//                         server,
-//                         {},
-//                     );
-//                     console.log('remove', result);
-//                     await KeychainQ.resetInternetPasswords(null, {});
-//                     const credAfter = await KeychainQ.findInternetPassword(
-//                         server,
-//                         {
-//                             account: creds[0].account,
-//                         },
-//                     );
-//                     console.log(credAfter);
-//                 }, 10000);
-//             } catch (error) {
-//                 Object.getOwnPropertyNames(error).forEach(prop => {
-//                     console.log(prop + ' => ' + error[prop]);
-//                     if (prop === 'userInfo') {
-//                         console.log(JSON.stringify(error[prop], null, 2));
-//                     }
-//                 });
-//                 console.warn(error);
-//             }
-//         })();
-//     }
-
-//     componentDidUpdate() {
-//         console.log(this.state);
-//     }
-//     render() {
-//         return (
-//             <SafeAreaView style={styles.container}>
-//                 <ScrollView>
-//                     <Text style={styles.welcome}>☆KeychainQ example☆</Text>
-//                     <Text style={styles.welcome}>Biometry Type</Text>
-//                     <Text style={styles.instructions}>
-//                         {this.state.biometryType}
-//                     </Text>
-//                     <Text style={styles.welcome}>Password? in {server}</Text>
-//                     <Text style={styles.instructions}>
-//                         {this.state.existsAnyAccount}
-//                     </Text>
-//                     <Text style={styles.welcome}>
-//                         Password? in {server} and {creds[0].account}
-//                     </Text>
-//                     <Text style={styles.instructions}>
-//                         {this.state.existsAccount}
-//                     </Text>
-//                     <Text style={styles.welcome}>
-//                         Password? in {server} and unknown user
-//                     </Text>
-//                     <Text style={styles.instructions}>
-//                         {this.state.notExistsAccount}
-//                     </Text>
-//                     <Text style={styles.welcome}>
-//                         credentials in {server} and {creds[0].account}
-//                     </Text>
-//                     <Text style={styles.instructions}>
-//                         {this.state.credentials &&
-//                             [
-//                                 'account=',
-//                                 this.state.credentials.account,
-//                                 ', password=',
-//                                 this.state.credentials.password,
-//                             ].join('')}
-//                     </Text>
-//                     <Text style={styles.welcome}>credentials in {server}</Text>
-//                     <Text style={styles.instructions}>
-//                         {this.state.allCredentials}
-//                     </Text>
-//                 </ScrollView>
-//             </SafeAreaView>
-//         );
-//     }
-// }
 
 const styles = StyleSheet.create({
   container: {

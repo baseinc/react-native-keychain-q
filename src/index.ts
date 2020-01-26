@@ -10,9 +10,15 @@ import {
     ServerAccountOptions,
     InternetCredentials,
     biometryTypeLabel,
+    isErrorInfo,
 } from './internal/types';
 import { useOnMount } from './internal/hooks';
 import { useCallback } from 'react';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function keychainErrorInfo(error: any) {
+    return isErrorInfo(error);
+}
 
 export function keychainErrorCode(name: KeychainErrorCodes) {
     if (Keychain) {
@@ -22,7 +28,7 @@ export function keychainErrorCode(name: KeychainErrorCodes) {
 }
 
 export function getBiometryTypeLabel(key: BiometryType) {
-    return biometryTypeLabel[key];
+    return biometryTypeLabel[key]?.label;
 }
 
 export async function fetchCanUseDeviceAuthPolicy(
