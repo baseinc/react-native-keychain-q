@@ -97,7 +97,7 @@ export type KeychainErrorInfo = Readonly<
 >;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isKeychainErrorInfo = (arg: any): arg is KeychainErrorInfo =>
+export const isErrorInfo = (arg: any): arg is KeychainErrorInfo =>
     arg.code !== undefined && arg.message !== undefined;
 
 /**
