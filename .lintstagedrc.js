@@ -1,6 +1,7 @@
 module.exports = {
   'ios/*.swift': () => [
+    `yarn lint`,
     `swiftformat .`,
-    `git add ios/*.swift`
+    `git add`
   ]
 }
