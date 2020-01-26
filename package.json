@@ -1,7 +1,7 @@
 {
   "name": "react-native-keychain-q",
   "title": "React Native Keychain Q",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Keychain Service API Wrapper for React Native iOS",
   "main": "lib/commonjs/index.js",
   "scripts": {

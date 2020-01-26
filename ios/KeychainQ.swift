@@ -282,17 +282,18 @@ extension KeychainQ {
     }
 
     func get(server: String, options: Any) throws -> InternetCredentials? {
-        guard let account = AccountAttribute(item: options) else { throw KeychainError.invalidInputData(message: "The given data was not valid. `account` is not found") }
-        let query = try matchingInternetPasswordQueryBuilder(server: server, options: options)
-            .with(account: account.rawValue)
+        let account = AccountAttribute(item: options)
+        var queryBuilder = try matchingInternetPasswordQueryBuilder(server: server, options: options)
             .with(attributes: [
                 kSecMatchLimit as String: kSecMatchLimitOne,
                 kSecReturnAttributes as String: true,
                 kSecReturnData as String: true,
             ])
-            .query
+        if let account = account {
+            queryBuilder = queryBuilder.with(account: account.rawValue)
+        }
         var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        let status = SecItemCopyMatching(queryBuilder.query as CFDictionary, &result)
         switch status {
         case errSecSuccess:
             guard let result = result else { throw KeychainError.unexpectedPasswordData }
