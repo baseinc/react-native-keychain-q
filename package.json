@@ -1,7 +1,7 @@
 {
   "name": "react-native-keychain-q",
   "title": "React Native Keychain Q",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Keychain Service API Wrapper for React Native iOS",
   "main": "lib/commonjs/index.js",
   "scripts": {
@@ -46,6 +46,7 @@
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.9.0",
     "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-react-hooks": "^2.3.0",
     "husky": "^4.2.0",
     "lint-staged": "^10.0.1",
     "prettier": "^1.19.1",
@@ -64,7 +65,12 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      "commonjs",
+      [
+        "commonjs",
+        {
+          "flow": true
+        }
+      ],
       "module",
       "typescript"
     ]

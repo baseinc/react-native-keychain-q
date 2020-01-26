@@ -6,66 +6,197 @@
  * react-native init example
  *
  * https://github.com/facebook/react-native
+ * @format
+ * @flow
  */
 
-import React, {useEffect} from 'react';
-import {StyleSheet, ScrollView, SafeAreaView} from 'react-native';
-import Keychain from '..';
+import React, {useEffect, useState, useCallback} from 'react';
+import {
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  View,
+  Text,
+  TextInput,
+  Button,
+  Switch,
+} from 'react-native';
+import {
+  fetchSupportedBiometryType,
+  saveInternetPassword,
+  findInternetPassword,
+  removeInternetPassword,
+  biometryTypeLabel,
+} from 'react-native-keychain-q';
 
 const server = 'https://keychain-q.example.com';
-const creds = [
-    {account: 'bob', password: 'pass1'},
-    {account: 'alice', password: 'pass2'},
+const items = [
+  {account: 'bob', password: 'pass1'},
+  {account: 'alice', password: 'pass2'},
 ];
 
 export default function App() {
-    useEffect(() => {
-        // console.log('errorConstants', keychainErrorCode('userCanceled'));
-        console.log('errorConstants', Keychain.keychainErrorCode);
-    }, []);
-    return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView>
-                {/* <Text style={styles.welcome}>☆KeychainQ example☆</Text>
-                <Text style={styles.welcome}>Biometry Type</Text>
-                <Text style={styles.instructions}>
-                    {this.state.biometryType}
-                </Text>
-                <Text style={styles.welcome}>Password? in {server}</Text>
-                <Text style={styles.instructions}>
-                    {this.state.existsAnyAccount}
-                </Text>
-                <Text style={styles.welcome}>
-                    Password? in {server} and {creds[0].account}
-                </Text>
-                <Text style={styles.instructions}>
-                    {this.state.existsAccount}
-                </Text>
-                <Text style={styles.welcome}>
-                    Password? in {server} and unknown user
-                </Text>
-                <Text style={styles.instructions}>
-                    {this.state.notExistsAccount}
-                </Text>
-                <Text style={styles.welcome}>
-                    credentials in {server} and {creds[0].account}
-                </Text>
-                <Text style={styles.instructions}>
-                    {this.state.credentials &&
-                        [
-                            'account=',
-                            this.state.credentials.account,
-                            ', password=',
-                            this.state.credentials.password,
-                        ].join('')}
-                </Text>
-                <Text style={styles.welcome}>credentials in {server}</Text>
-                <Text style={styles.instructions}>
-                    {this.state.allCredentials}
-                </Text> */}
-            </ScrollView>
-        </SafeAreaView>
-    );
+  const [debugLog, setDebugLog] = useState('-----');
+  const [useBiometry, setUseBiometry] = useState({
+    label: '',
+    disabled: true,
+    used: false,
+  });
+  const useBiometrySwitchOnChange = useCallback(enabled => {
+    setUseBiometry(state => ({...state, used: enabled}));
+  }, []);
+
+  const [biometryType, setBiometryType] = useState();
+  useEffect(() => {
+    console.log(biometryTypeLabel);
+    let ignored = false;
+    (async () => {
+      try {
+        const result = await fetchSupportedBiometryType();
+        if (!ignored) {
+          setBiometryType(result);
+          if (['faceID', 'touchID'].includes(result)) {
+            setUseBiometry(state => ({...state, disabled: false}));
+          }
+        }
+      } catch (error) {
+        console.warn(error);
+      }
+    })();
+    return () => {
+      ignored = true;
+    };
+  }, []);
+  const addCallback = useCallback(
+    index => {
+      let ignored = false;
+      const item = items[index];
+      (async () => {
+        try {
+          const useBio = useBiometry.used;
+          const opts = useBiometry.used
+            ? {
+                accessControls: ['userPresence'],
+                deviceOwnerAuthPolicy: 'biometrics',
+              }
+            : undefined;
+          console.log(useBio);
+          await saveInternetPassword(server, item.account, item.password, opts);
+          if (!ignored) {
+            setDebugLog('Added credentials ' + '#' + index);
+          }
+        } catch (error) {
+          console.warn(error);
+        }
+      })();
+      return () => {
+        ignored = true;
+      };
+    },
+    [useBiometry.used],
+  );
+  const readCallback = useCallback(index => {
+    let ignored = false;
+    const item = items[index];
+    (async () => {
+      try {
+        const credentials = await findInternetPassword(server, {
+          account: item.account,
+        });
+        if (!ignored) {
+          if (credentials) {
+            setDebugLog(
+              'Read credentials #' +
+                index +
+                ': ' +
+                credentials.account +
+                '/' +
+                credentials.password,
+            );
+          } else {
+            setDebugLog('Not found credentials #' + index);
+          }
+        }
+      } catch (error) {
+        console.warn(error);
+      }
+    })();
+    return () => {
+      ignored = true;
+    };
+  }, []);
+  const deleteCallback = useCallback(index => {
+    let ignored = false;
+    const item = items[index];
+    (async () => {
+      try {
+        await removeInternetPassword(server, item.account);
+        if (!ignored) {
+          setDebugLog('Deleted credentials ' + '#' + index);
+        }
+      } catch (error) {
+        console.warn(error);
+      }
+    })();
+    return () => {
+      ignored = true;
+    };
+  }, []);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View>
+        <Text style={styles.welcome}>☆KeychainQ example☆</Text>
+        <Text style={styles.instructions}>{debugLog}</Text>
+        <Text style={styles.welcome}>server example</Text>
+        <Text style={styles.instructions}>{server}</Text>
+        <Text style={styles.welcome}>Test accounts</Text>
+        {items.map((item, index) => (
+          <View style={styles.accountInputContainer} key={index}>
+            <Text style={styles.accountNumber}>#{index}</Text>
+            <TextInput
+              editable={false}
+              style={styles.accountInput}
+              value={item.account}
+            />
+            <TextInput
+              editable={false}
+              style={styles.accountInput}
+              value={item.password}
+            />
+            <Button
+              disabled={biometryType ? false : true}
+              title="Add"
+              onPress={() => addCallback(index)}
+            />
+            <Button
+              disabled={biometryType ? false : true}
+              title="Read"
+              onPress={() => readCallback(index)}
+            />
+            <Button
+              disabled={biometryType ? false : true}
+              title="Delete"
+              onPress={() => deleteCallback(index)}
+            />
+          </View>
+        ))}
+      </View>
+      <ScrollView>
+        <Text style={styles.welcome}>Biometry Type</Text>
+        <View style={styles.instructionsWCtrlContainer}>
+          <Text style={[styles.instructions, styles.instructionsWCtrl]}>
+            {biometryType ? biometryTypeLabel[biometryType].label : 'UNKNOWN'}
+          </Text>
+          <Switch
+            value={useBiometry.used}
+            disabled={useBiometry.disabled}
+            onValueChange={useBiometrySwitchOnChange}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
 // export class Hoge extends React.Component {
@@ -229,20 +360,47 @@ export default function App() {
 // }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#F5FCFF',
-    },
-    welcome: {
-        fontSize: 20,
-        textAlign: 'center',
-        margin: 10,
-    },
-    instructions: {
-        textAlign: 'center',
-        color: '#333333',
-        marginBottom: 5,
-    },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+  },
+  welcome: {
+    fontSize: 20,
+    textAlign: 'center',
+    margin: 10,
+  },
+  instructions: {
+    textAlign: 'center',
+    color: '#333333',
+    marginBottom: 5,
+  },
+  instructionsWCtrlContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  instructionsWCtrl: {
+    padding: 8,
+    height: 40,
+  },
+  accountInputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  accountNumber: {
+    height: 40,
+    textAlign: 'center',
+  },
+  accountInput: {
+    borderColor: 'gainsboro',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    height: 40,
+    minWidth: 80,
+    borderRadius: 6,
+    marginHorizontal: 4,
+    color: 'gray',
+  },
 });

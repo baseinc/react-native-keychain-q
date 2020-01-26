@@ -6,7 +6,21 @@ module.exports = {
   extends: ['@react-native-community'],
   overrides: [
     {
-      files: ['*.ts', '*.tsx'],
+      files: ['*.ts', '*.tsx', 'example/*.js'],
+      rules: Object.assign(
+        typescriptEslintRecommended.rules,
+        typescriptEslintPrettier.rules,
+        {
+          '@typescript-eslint/explicit-member-accessibility': 'off',
+          '@typescript-eslint/explicit-function-return-type': 'off',
+          '@typescript-eslint/no-use-before-define': 'off',
+          'react-native/no-inline-styles': 'off'
+        },
+      ),
+    },
+    {
+      files: ['example/*.js'],
+      plugins: ['react-hooks'],
       rules: Object.assign(
         typescriptEslintRecommended.rules,
         typescriptEslintPrettier.rules,
@@ -15,6 +29,8 @@ module.exports = {
           '@typescript-eslint/explicit-function-return-type': 'off',
           '@typescript-eslint/no-use-before-define': 'off',
           'react-native/no-inline-styles': 'off',
+          "react-hooks/rules-of-hooks": "error",
+          "react-hooks/exhaustive-deps": "error",
         },
       ),
     }

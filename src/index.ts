@@ -9,6 +9,7 @@ import {
     ServerOptions,
     ServerAccountOptions,
     InternetCredentials,
+    biometryTypeLabel,
 } from './internal/types';
 import { useOnMount } from './internal/hooks';
 import { useCallback } from 'react';
@@ -18,6 +19,10 @@ export function keychainErrorCode(name: KeychainErrorCodes) {
         return Keychain.keychainErrorCodes[name];
     }
     return 'UNKNOWN';
+}
+
+export function getBiometryTypeLabel(key: BiometryType) {
+    return biometryTypeLabel[key];
 }
 
 export async function fetchCanUseDeviceAuthPolicy(
@@ -145,7 +150,3 @@ export function useKeychain(server: string): AsyncKeychainHook {
             retrieveInternetPasswords({ server, ...args }),
     };
 }
-
-export default {
-    keychainErrorCode,
-};

@@ -11,6 +11,8 @@
     "strict": true,
     "moduleResolution": "node",
     "skipLibCheck": true,
+    "checkJs": true,
+    "allowJs": true,
     "lib": [
       "es2015",
       "es2016",
