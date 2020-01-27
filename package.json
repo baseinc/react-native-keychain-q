@@ -11,7 +11,8 @@
     "lint": "npx eslint ./ --ignore-pattern example --ignore-pattern node_modules --fix --quiet",
     "ts-check": "npx tsc --noEmit",
     "clean": "cd example && npx react-native-clean-project --keep-node-modules --remove-iOS-build --remove-iOS-pods --keep-brew --keep-pods && \\rm -fr ios/Pods",
-    "dev-sync": "yarn build && cp -r *podspec lib ios src example/node_modules/react-native-keychain-q/"
+    "dev-sync": "yarn build && cp -r *podspec lib ios src example/node_modules/react-native-keychain-q/",
+    "pod:lib:lint": "pod lib lint --quick --allow-warnings"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,10 @@
     "baseUrl": "https://github.com/baseinc/react-native-keychain-q"
   },
   "keywords": [
-    "react-native"
+    "react-native",
+    "native-module",
+    "ios",
+    "keychain"
   ],
   "author": {
     "name": "Satoshi OHKI",
@@ -71,7 +75,11 @@
   "types": "lib/typescript/src/index.d.ts",
   "files": [
     "src",
-    "lib"
+    "lib",
+    "ios",
+    "README.md",
+    "package.json",
+    "*.podspec"
   ],
   "@react-native-community/bob": {
     "source": "src",
