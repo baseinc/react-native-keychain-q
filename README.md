@@ -20,6 +20,10 @@ Keychain Wrapper for React Native.
       - [getBiometryTypeLabel()](#getbiometrytypelabel)
       - [resetInternetPasswords()](#resetinternetpasswords)
       - [retrieveInternetPasswords()](#retrieveinternetpasswords)
+  - [Types](#types)
+    - [Options](#options)
+    - [InternetCredentials](#internetcredentials)
+    - [ErrorCodes](#errorcodes)
 
 ## Getting started
 
@@ -235,3 +239,61 @@ import * as keychain from 'react-native-keychain-q';
 const collection = await Keychain.retrieveInternetPasswords('https://keychain-q.example.com');
 // -> [{ server: 'https://keychain-q.example.com', account: 'bob',  password: 'pass' }, ...]
 ```
+
+## Types
+
+### Options
+
+Describes the options to request API.
+
+| Parameter               | Type                            | Description                                                                                                                                                      | Default        |
+| ----------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `accessGroup`           | `string`                        | (Common option) A key whose value is a string indicating the access group an item is in. Not required by default. sharing access to keychain items in app group. |                |
+| `authenticationPrompt`  | `string`                        | (Common option) Custom authentication Prompt message to display if the item protected. It will be displayed in case of Touch ID or passcode authentication.      |                |
+| `deviceOwnerAuthPolicy` | `'biometrics' | 'any' | 'none'` | (Common option) The policy of biometry or passcode to pre-check local authentication. currently, it is passed to only `saveInternetPassword()`                   |                |
+| `accessible`            | `Accessible`                    | (use `saveInternetPassword()`) The accessibility value to access to the data in keychain.                                                                        | `whenUnlocked` |
+| `accessControls`        | `AccessControlConstraints[]`    | (use `saveInternetPassword()`) The access controls for the item in keychain.                                                                                     |                |
+| `server`                | `string`                        | Associated server for the item in Keychain.                                                                                                                      |                |
+| `account`               | `string`                        | Associated account for the item in Keychain.                                                                                                                     |
+**Accessible**
+| Parameter                        | Description                                                 |
+| -------------------------------- | ----------------------------------------------------------- |
+| `whenPasscodeSetThisDeviceOnly`  | Same as `kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly`.  |
+| `whenUnlockedThisDeviceOnly`     | Same as `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`.     |
+| `whenUnlocked`                   | Same as `kSecAttrAccessibleWhenUnlocked`.                   |
+| `afterFirstUnlockThisDeviceOnly` | Same as `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`. |
+| `afterFirstUnlock`               | Same as `kSecAttrAccessibleAfterFirstUnlock`.               |
+
+**AccessControlConstraints**
+| Parameter             | Description                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `devicePasscode`      | https://developer.apple.com/documentation/security/secaccesscontrolcreateflags/1394326-devicepasscode.      |
+| `biometryAny`         | https://developer.apple.com/documentation/security/secaccesscontrolcreateflags/2937191-biometryany.         |
+| `biometryCurrentSet`  | https://developer.apple.com/documentation/security/secaccesscontrolcreateflags/2937192-biometrycurrentset.  |
+| `userPresence`        | https://developer.apple.com/documentation/security/secaccesscontrolcreateflags/1392879-userpresence.        |
+| `applicationPassword` | https://developer.apple.com/documentation/security/secaccesscontrolcreateflags/1617930-applicationpassword. |
+
+### InternetCredentials
+
+Describes the structure of credentials  to resolve from Keychain.
+
+| Parameter    | Type                | Description                                                  | Default |
+| ------------ | ------------------- | ------------------------------------------------------------ | ------- |
+| `server`     | `string (required)` | Associated host(e.g. `keychain-q.example.com`) for the item. |         |
+| `port`       | `Int (optional)`    | Associated port(e.g. `8081`) for the item.                   |         |
+| `account`    | `string (required)` | The item's account name.                                     |         |
+| `password`   | `string (required)` | The item's data.                                             |         |
+| `createdAt`  | `number`            | The item's creation date.                                    |         |
+| `modifiedAt` | `number`            | The item's last modification date.                           |         |
+
+### ErrorCodes
+
+| Key                      | Description                                                         |
+| ------------------------ | ------------------------------------------------------------------- |
+| `userCanceled`           | When user canceled the operation.                                   |
+| `noPassword`             | The password not found.                                             |
+| `notAvailable`           | Unavailable.                                                        |
+| `inputPasswordInvalid`   |                                                                     |
+| `inputValueInvalid`      | When the invalid input data was passed.                             |
+| `unexpectedPasswordData` | The item found but it is unavailable for some reason.               |
+| `unhandledException`     | Keychain returns [OSStatus](https://www.osstatus.com/) of an error. |
