@@ -256,6 +256,7 @@ Describes the options to request API.
 | `server`                | `string`                        | Associated server for the item in Keychain.                                                                                                                      |                |
 | `account`               | `string`                        | Associated account for the item in Keychain.                                                                                                                     |
 **Accessible**
+
 | Parameter                        | Description                                                 |
 | -------------------------------- | ----------------------------------------------------------- |
 | `whenPasscodeSetThisDeviceOnly`  | Same as `kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly`.  |
