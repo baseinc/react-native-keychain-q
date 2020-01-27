@@ -12,7 +12,8 @@
     "ts-check": "npx tsc --noEmit",
     "clean": "cd example && npx react-native-clean-project --keep-node-modules --remove-iOS-build --remove-iOS-pods --keep-brew --keep-pods && \\rm -fr ios/Pods",
     "dev-sync": "yarn build && cp -r *podspec lib ios src example/node_modules/react-native-keychain-q/",
-    "pod:lib:lint": "pod lib lint --quick --allow-warnings"
+    "pod:lib:lint": "pod lib lint --quick --allow-warnings",
+    "postinstall": "rm -rf node_modules/dtrace-provider"
   },
   "repository": {
     "type": "git",
@@ -54,6 +55,7 @@
     "@typescript-eslint/parser": "^2.17.0",
     "babel-jest": "^25.1.0",
     "cspell": "^4.0.44",
+    "detox": "^15.1.4",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.9.0",
     "eslint-plugin-prettier": "^3.1.2",
@@ -94,5 +96,19 @@
       "module",
       "typescript"
     ]
+  },
+  "detox": {
+    "runner-config": "example/e2e/config.json",
+    "configurations": {
+      "ios.sim.debug": {
+        "binaryPath": "example/ios/build/Build/Products/Debug-iphonesimulator/example.app",
+        "build": "export RCT_NO_LAUNCH_PACKAGER=true && xcodebuild -workspace example/ios/example.xcworkspace -scheme example -parallelizeTargets -configuration Debug -sdk iphonesimulator -derivedDataPath example/ios/build -UseModernBuildSystem=YES | xcpretty -k",
+        "type": "ios.simulator",
+        "device": {
+          "type": "iPhone X"
+        }
+      }
+    },
+    "test-runner": "jest"
   }
 }
