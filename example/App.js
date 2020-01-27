@@ -20,6 +20,7 @@ import {
   TextInput,
   Button,
   Switch,
+  TouchableOpacity,
 } from 'react-native';
 import {
   fetchSupportedBiometryType,
@@ -174,7 +175,10 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View>
+      <View testID="welcome">
+        <TouchableOpacity testID="MyUniqueId123">
+          <Text>Some button</Text>
+        </TouchableOpacity>
         <Text style={styles.welcome}>☆KeychainQ example☆</Text>
         <Text style={styles.instructions}>{debugLog}</Text>
         <Text style={styles.welcome}>server example</Text>
