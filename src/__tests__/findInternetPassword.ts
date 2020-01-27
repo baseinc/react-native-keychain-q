@@ -50,6 +50,30 @@ describe('react-native-keychain-q#findInternetPassword', () => {
                         ).toHaveBeenCalledWith(server, {});
                     });
                 });
+
+                describe('throws an exception for user auth canceled', () => {
+                    let received: Error;
+                    beforeEach(() => {
+                        jest.clearAllMocks();
+                        const error = new Error('user canceled.');
+                        Object.defineProperty(error, 'code', {
+                            value: 'userCanceled',
+                            writable: false,
+                        });
+                        received = error;
+                        NativeModules.KeychainQ.findInternetPassword.mockRejectedValue(
+                            error
+                        );
+                    });
+
+                    it('fails with an error', async () => {
+                        try {
+                            await findInternetPassword(server);
+                        } catch (error) {
+                            expect(error).toMatchObject(received);
+                        }
+                    });
+                });
             });
         });
     });
