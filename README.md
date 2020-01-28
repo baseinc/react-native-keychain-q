@@ -153,7 +153,6 @@ import * as keychain from 'react-native-keychain-q';
 
 const credentials: InternetCredentials | undefined = await Keychain.findInternetPassword(
   'https://keychain-q.example.com',
-  'bob',
   {
     account: 'bob',
     accessGroup: 'com.example.keychain-q.shared',
@@ -246,15 +245,15 @@ const collection = await Keychain.retrieveInternetPasswords('https://keychain-q.
 
 Describes the options to request API.
 
-| Parameter               | Type                            | Description                                                                                                                                                      | Default        |
-| ----------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| `accessGroup`           | `string`                        | (Common option) A key whose value is a string indicating the access group an item is in. Not required by default. sharing access to keychain items in app group. |                |
-| `authenticationPrompt`  | `string`                        | (Common option) Custom authentication Prompt message to display if the item protected. It will be displayed in case of Touch ID or passcode authentication.      |                |
-| `deviceOwnerAuthPolicy` | `biometrics \| any \| none` | (Common option) The policy of biometry or passcode to pre-check local authentication. currently, it is passed to only `saveInternetPassword()`                   |                |
-| `accessible`            | `Accessible`                    | (use `saveInternetPassword()`) The accessibility value to access to the data in keychain.                                                                        | `whenUnlocked` |
-| `accessControls`        | `AccessControlConstraints[]`    | (use `saveInternetPassword()`) The access controls for the item in keychain.                                                                                     |                |
-| `server`                | `string`                        | Associated server for the item in Keychain.                                                                                                                      |                |
-| `account`               | `string`                        | Associated account for the item in Keychain.                                                                                                                     |
+| Parameter               | Type                         | Description                                                                                                                                                      | Default        |
+| ----------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `accessGroup`           | `string`                     | (Common option) A key whose value is a string indicating the access group an item is in. Not required by default. sharing access to keychain items in app group. |                |
+| `authenticationPrompt`  | `string`                     | (Common option) Custom authentication Prompt message to display if the item protected. It will be displayed in case of Touch ID or passcode authentication.      |                |
+| `deviceOwnerAuthPolicy` | `biometrics \| any \| none`  | (Common option) The policy of biometry or passcode to pre-check local authentication. currently, it is passed to only `saveInternetPassword()`                   |                |
+| `accessible`            | `Accessible`                 | (use `saveInternetPassword()`) The accessibility value to access to the data in keychain.                                                                        | `whenUnlocked` |
+| `accessControls`        | `AccessControlConstraints[]` | (use `saveInternetPassword()`) The access controls for the item in keychain.                                                                                     |                |
+| `server`                | `string`                     | Associated server for the item in Keychain.                                                                                                                      |                |
+| `account`               | `string`                     | Associated account for the item in Keychain.                                                                                                                     |
 **Accessible**
 
 | Parameter                        | Description                                                 |
