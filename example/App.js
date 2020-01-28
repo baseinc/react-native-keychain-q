@@ -20,7 +20,7 @@ import {
   TextInput,
   Button,
   Switch,
-  TouchableOpacity,
+  Linking,
 } from 'react-native';
 import {
   fetchSupportedBiometryType,
@@ -172,15 +172,25 @@ export default function App() {
       }
     })();
   }, []);
+  const deepLinkHandler = useCallback(args => {
+    setDebugLog('catch deepLink from ' + args.url);
+  }, []);
+  useEffect(() => {
+    Linking.addEventListener('url', deepLinkHandler);
+    return () => {
+      Linking.removeEventListener('url', deepLinkHandler);
+    };
+  }, [deepLinkHandler]);
 
   return (
     <SafeAreaView style={styles.container}>
       <View testID="welcome">
-        <TouchableOpacity testID="MyUniqueId123">
-          <Text>Some button</Text>
-        </TouchableOpacity>
-        <Text style={styles.welcome}>☆KeychainQ example☆</Text>
-        <Text style={styles.instructions}>{debugLog}</Text>
+        <Text testID="welcome-text" style={styles.welcome}>
+          ☆KeychainQ example☆
+        </Text>
+        <Text testID="debug-log" style={styles.instructions}>
+          {debugLog}
+        </Text>
         <Text style={styles.welcome}>server example</Text>
         <Text style={styles.instructions}>{server}</Text>
         <Text style={styles.welcome}>Test accounts</Text>
