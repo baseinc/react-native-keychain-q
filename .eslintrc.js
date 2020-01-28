@@ -22,12 +22,9 @@ module.exports = {
       files: ['example/*.js'],
       plugins: ['react-hooks'],
       rules: Object.assign(
-        typescriptEslintRecommended.rules,
-        typescriptEslintPrettier.rules,
         {
-          '@typescript-eslint/explicit-member-accessibility': 'off',
-          '@typescript-eslint/explicit-function-return-type': 'off',
-          '@typescript-eslint/no-use-before-define': 'off',
+          'prettier/prettier': 'off',
+          "@typescript-eslint/no-var-requires": "off",
           'react-native/no-inline-styles': 'off',
           "react-hooks/rules-of-hooks": "error",
           "react-hooks/exhaustive-deps": "error",
