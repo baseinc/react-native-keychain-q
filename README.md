@@ -5,6 +5,7 @@ Keychain Wrapper for React Native.
 
 - [react-native-keychain-q](#react-native-keychain-q)
   - [Getting started](#getting-started)
+    - [Prepare](#prepare)
     - [Mostly automatic installation](#mostly-automatic-installation)
       - [Using React Native >= 0.60](#using-react-native--060)
       - [Using React Native < 0.60 or skip auto-linking](#using-react-native--060-or-skip-auto-linking)
@@ -26,6 +27,20 @@ Keychain Wrapper for React Native.
     - [ErrorCodes](#errorcodes)
 
 ## Getting started
+
+
+### Prepare
+
+**Since the native code for this module is written in Swift, you need to add a bridging-header.**
+
+Because it includes Swift code, you need to use both Objective-C and Swift.
+Don't worry. Just add bridging-header file.
+
+https://developer.apple.com/documentation/swift/imported_c_and_objective-c_apis/importing_objective-c_into_swift
+
+1. Add some Swift file(e.g. Empty.Swift) in your xcode project.
+2. Xcode offers to create this header.
+3. If you accept, Xcode creates the bridging header file and automatically configures build settings.
 
 using yarn:
 
