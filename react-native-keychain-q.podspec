@@ -9,12 +9,12 @@ Pod::Spec.new do |s|
   s.description  = <<-DESC
                   react-native-keychain-q
                    DESC
-  s.homepage     = "https://github.com/github_account/react-native-keychain-q"
-  s.license      = "MIT"
+  s.homepage     = "https://github.com/baseinc/react-native-keychain-q"
+  s.license      = package["license"]
   # s.license    = { :type => "MIT", :file => "FILE_LICENSE" }
-  s.authors      = { "Your Name" => "yourname@email.com" }
+  s.authors      = { package["author"]["name"] => package["author"]["email"] }
   s.platforms    = { :ios => "9.0" }
-  s.source       = { :git => "https://github.com/github_account/react-native-keychain-q.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/baseinc/react-native-keychain-q.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,swift}"
   s.requires_arc = true

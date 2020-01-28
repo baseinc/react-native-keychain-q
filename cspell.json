@@ -1,17 +1,21 @@
 {
-    "version": "0.1",
-    "language": "en",
-    "words": [
-        "esnext",
-        "keychain",
-        "q"
-    ],
-    "flagWords": [],
-    "ignoreRegExpList": [
-        "[０-９Ａ-Ｚａ-ｚぁ-んァ-ヶ亜-熙纊-黑]+"
-    ],
-    "ignorePaths": [
-        "node_modules",
-        "lib"
-    ]
+  "version": "0.1",
+  "language": "en",
+  "words": [
+    "esnext",
+    "keychain",
+    "passcode",
+    "podspec",
+    "q",
+    "swiftformat",
+    "xcode"
+  ],
+  "flagWords": [],
+  "ignoreRegExpList": [
+    "[０-９Ａ-Ｚａ-ｚぁ-んァ-ヶ亜-熙纊-黑]+"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    "lib"
+  ]
 }

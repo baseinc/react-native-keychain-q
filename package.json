@@ -1,12 +1,19 @@
 {
   "name": "react-native-keychain-q",
   "title": "React Native Keychain Q",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "description": "Keychain Service API Wrapper for React Native iOS",
   "main": "lib/commonjs/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "bob build"
+    "test:jest": "jest \"/src/\"",
+    "build": "bob build",
+    "prepare": "yarn build",
+    "lint": "npx eslint ./ --ignore-pattern example --ignore-pattern node_modules --fix --quiet",
+    "ts-check": "npx tsc --noEmit",
+    "clean": "cd example && npx react-native-clean-project --keep-node-modules --remove-iOS-build --remove-iOS-pods --keep-brew --keep-pods && \\rm -fr ios/Pods",
+    "dev-sync": "yarn build && cp -r *podspec lib ios src example/node_modules/react-native-keychain-q/",
+    "pod:lib:lint": "pod lib lint --quick --allow-warnings",
+    "postinstall": "rm -rf node_modules/dtrace-provider"
   },
   "repository": {
     "type": "git",
@@ -14,7 +21,10 @@
     "baseUrl": "https://github.com/baseinc/react-native-keychain-q"
   },
   "keywords": [
-    "react-native"
+    "react-native",
+    "native-module",
+    "ios",
+    "keychain"
   ],
   "author": {
     "name": "Satoshi OHKI",
@@ -23,6 +33,11 @@
   "license": "MIT",
   "licenseFilename": "LICENSE",
   "readmeFilename": "README.md",
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
   "peerDependencies": {
     "react": "^16.8.1",
     "react-native": ">=0.59.0-rc.0 <1.0.x"
@@ -32,19 +47,29 @@
     "@babel/runtime": "^7.8.3",
     "@react-native-community/bob": "^0.8.0",
     "@react-native-community/eslint-config": "^0.0.6",
+    "@react-native-community/eslint-plugin": "^1.0.0",
+    "@types/jest": "^24.9.1",
     "@types/react": "^16.9.18",
     "@types/react-native": "^0.61.2",
     "@typescript-eslint/eslint-plugin": "^2.17.0",
     "@typescript-eslint/parser": "^2.17.0",
+    "babel-jest": "^25.1.0",
     "cspell": "^4.0.44",
+    "detox": "^15.1.4",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.9.0",
     "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-react-hooks": "^2.3.0",
     "husky": "^4.2.0",
+    "jest": "^25.1.0",
     "lint-staged": "^10.0.1",
+    "metro-react-native-babel-preset": "^0.58.0",
     "prettier": "^1.19.1",
     "react": "^16.8.3",
     "react-native": "^0.59.10",
+    "react-test-renderer": "^16.12.0",
+    "ts-jest": "^25.0.0",
+    "ts-node": "^8.6.2",
     "typescript": "^3.7.5"
   },
   "react-native": "src/index.ts",
@@ -52,15 +77,38 @@
   "types": "lib/typescript/src/index.d.ts",
   "files": [
     "src",
-    "lib"
+    "lib",
+    "ios",
+    "README.md",
+    "package.json",
+    "*.podspec"
   ],
   "@react-native-community/bob": {
     "source": "src",
     "output": "lib",
     "targets": [
-      "commonjs",
+      [
+        "commonjs",
+        {
+          "flow": true
+        }
+      ],
       "module",
       "typescript"
     ]
+  },
+  "detox": {
+    "runner-config": "example/e2e/config.json",
+    "configurations": {
+      "ios.sim.debug": {
+        "binaryPath": "example/ios/build/Build/Products/Debug-iphonesimulator/example.app",
+        "build": "export RCT_NO_LAUNCH_PACKAGER=true && xcodebuild -workspace example/ios/example.xcworkspace -scheme example -parallelizeTargets -configuration Debug -sdk iphonesimulator -derivedDataPath example/ios/build -UseModernBuildSystem=YES | xcpretty -k",
+        "type": "ios.simulator",
+        "device": {
+          "type": "iPhone 11 Pro"
+        }
+      }
+    },
+    "test-runner": "jest"
   }
 }

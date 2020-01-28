@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6241085523D9A0A80038AC37 /* ItemParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6241085423D9A0A80038AC37 /* ItemParser.swift */; };
 		629C2A0323D8053F0062B038 /* KeychainQ.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629C2A0223D8053F0062B038 /* KeychainQ.swift */; };
+		629C2A0923D85AC00062B038 /* Structures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629C2A0823D85AC00062B038 /* Structures.swift */; };
+		629C2A0B23D9421D0062B038 /* AttributeMappings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629C2A0A23D9421D0062B038 /* AttributeMappings.swift */; };
 		B3E7B58A1CC2AC0600A0062D /* KeychainQ.m in Sources */ = {isa = PBXBuildFile; fileRef = B3E7B5891CC2AC0600A0062D /* KeychainQ.m */; };
 /* End PBXBuildFile section */
 
@@ -25,9 +28,12 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libKeychainQ.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libKeychainQ.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6241085423D9A0A80038AC37 /* ItemParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemParser.swift; sourceTree = "<group>"; };
 		629C2A0123D8053F0062B038 /* KeychainQ-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "KeychainQ-Bridging-Header.h"; sourceTree = "<group>"; };
 		629C2A0223D8053F0062B038 /* KeychainQ.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainQ.swift; sourceTree = "<group>"; };
 		629C2A0423D8088E0062B038 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		629C2A0823D85AC00062B038 /* Structures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Structures.swift; sourceTree = "<group>"; };
+		629C2A0A23D9421D0062B038 /* AttributeMappings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributeMappings.swift; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* KeychainQ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KeychainQ.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -53,7 +59,10 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				6241085423D9A0A80038AC37 /* ItemParser.swift */,
 				629C2A0423D8088E0062B038 /* Config.xcconfig */,
+				629C2A0A23D9421D0062B038 /* AttributeMappings.swift */,
+				629C2A0823D85AC00062B038 /* Structures.swift */,
 				629C2A0223D8053F0062B038 /* KeychainQ.swift */,
 				B3E7B5891CC2AC0600A0062D /* KeychainQ.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
@@ -119,7 +128,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6241085523D9A0A80038AC37 /* ItemParser.swift in Sources */,
 				B3E7B58A1CC2AC0600A0062D /* KeychainQ.m in Sources */,
+				629C2A0B23D9421D0062B038 /* AttributeMappings.swift in Sources */,
+				629C2A0923D85AC00062B038 /* Structures.swift in Sources */,
 				629C2A0323D8053F0062B038 /* KeychainQ.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -171,7 +183,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -215,7 +226,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
