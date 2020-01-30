@@ -1,11 +1,13 @@
 {
   "name": "react-native-keychain-q",
   "title": "React Native Keychain Q",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Keychain Service API Wrapper for React Native iOS",
   "main": "lib/commonjs/index.js",
   "scripts": {
     "test:jest": "jest \"/src/\"",
+    "build:detox": "npx -p detox-cli detox build",
+    "test:detox": "npx -p detox-cli detox test",
     "build": "bob build",
     "prepare": "yarn build",
     "lint": "npx eslint ./ --ignore-pattern example --ignore-pattern node_modules --fix --quiet",
