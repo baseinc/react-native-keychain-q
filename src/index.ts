@@ -14,12 +14,8 @@ import {
 } from './internal/types';
 import { useOnMount } from './internal/hooks';
 import { useCallback } from 'react';
-export * from './internal/types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function keychainErrorInfo(error: any) {
-    return isErrorInfo(error);
-}
+export { isErrorInfo as isKeychainErrorInfo };
 
 export function keychainErrorCode(name: KeychainErrorCodes) {
     if (Keychain) {
