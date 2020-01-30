@@ -10,7 +10,7 @@
  * @flow
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -29,12 +29,12 @@ import {
   getBiometryTypeLabel,
   retrieveInternetPasswords,
 } from 'react-native-keychain-q';
-import { useEchoBackWithHandleDeepLink } from './EchoHooks';
+import {useEchoBackWithHandleDeepLink} from './EchoHooks';
 
 const server = 'https://keychain-q.example.com';
 const items = [
-  { account: 'bob', password: 'pass1' },
-  { account: 'alice', password: 'pass2' },
+  {account: 'bob', password: 'pass1'},
+  {account: 'alice', password: 'pass2'},
 ];
 
 export default function App() {
@@ -69,7 +69,7 @@ export default function App() {
     used: false,
   });
   const useBiometrySwitchOnChange = useCallback(enabled => {
-    setUseBiometry(state => ({ ...state, used: enabled }));
+    setUseBiometry(state => ({...state, used: enabled}));
   }, []);
 
   const [biometryType, setBiometryType] = useState();
@@ -105,9 +105,9 @@ export default function App() {
           const useBio = useBiometry.used;
           const opts = useBiometry.used
             ? {
-              accessControls: ['userPresence'],
-              deviceOwnerAuthPolicy: 'biometrics',
-            }
+                accessControls: ['userPresence'],
+                deviceOwnerAuthPolicy: 'biometrics',
+              }
             : undefined;
           console.log(useBio);
           await saveInternetPassword(server, item.account, item.password, opts);
@@ -138,11 +138,11 @@ export default function App() {
         if (credentials) {
           setDebugLog(
             'Read credentials #' +
-            index +
-            ': ' +
-            credentials.account +
-            '/' +
-            credentials.password,
+              index +
+              ': ' +
+              credentials.account +
+              '/' +
+              credentials.password,
           );
         } else {
           setDebugLog('Not found credentials #' + index);
