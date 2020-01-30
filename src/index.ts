@@ -15,7 +15,7 @@ import {
 import { useOnMount } from './internal/hooks';
 import { useCallback } from 'react';
 
-export { isErrorInfo as isKeychainErrorInfo };
+export const isKeychainErrorInfo = isErrorInfo;
 
 export function keychainErrorCode(name: KeychainErrorCodes) {
     if (Keychain) {
