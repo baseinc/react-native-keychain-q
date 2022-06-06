@@ -241,6 +241,8 @@ extension KeychainQ {
     }
 
     func remove(server: String, account: String, options: Any) throws {
+        let a = ["aaa", "bbb"]
+        let b = a[10]
         let commonAttrs = try CommonAttributes(item: options)
         let query = try InternetPasswordQueryBuilder(serverString: server)
             .with(commonAttributes: commonAttrs)
